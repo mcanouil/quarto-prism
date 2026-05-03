@@ -1,0 +1,23 @@
+# _schema.yml for "prism" filter extension
+# Describes options and element attributes for IDE tooling and runtime validation.
+
+# Extension-level metadata options.
+# Configured in _quarto.yml, _metadata.yml, or document front matter:
+#   extensions:
+#     prism:
+#       enabled: true
+options:
+  enabled:
+    type: boolean
+    default: true
+    description: "Enable or disable the prism filter."
+
+# Element attributes accepted by the filter on Pandoc elements.
+# Group keys: CSS class name, ID prefix, element type (Div, Span, Code,
+# CodeBlock, Header), or _any for all elements.
+# Used in: [text]{.prism attr=value} or ::: {.prism attr=value}
+element-attributes:
+  prism:
+    example-attr:
+      type: string
+      description: "An example attribute for the prism filter."

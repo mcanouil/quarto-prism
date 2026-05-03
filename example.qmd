@@ -1,0 +1,45 @@
+---
+title: "Prism"
+subtitle: "Quarto Extension"
+author: "Mickaël Canouil"
+format: html
+filters:
+  - prism
+---
+
+## Basic Usage
+
+Apply the filter using the `prism` class:
+
+::: {.prism}
+This content will be processed by the filter.
+:::
+
+## With Options
+
+Pass options as attributes:
+
+::: {.prism option1="value1"}
+This content has custom options applied.
+:::
+
+## Multiple Options
+
+Combine multiple options:
+
+::: {.prism option1="value1" option2="value2"}
+This content has multiple options applied.
+:::
+
+## Nested Content
+
+The filter handles nested content:
+
+::: {.prism}
+### Heading Inside Filter
+
+- List item 1.
+- List item 2.
+
+Paragraph with **bold** and *italic* text.
+:::
