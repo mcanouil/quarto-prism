@@ -10,4 +10,4 @@ repository-code: "https://github.com/mcanouil/quarto-prism"
 url: "https://m.canouil.dev/quarto-prism/"
 license: "MIT"
 date-released: "2026-05-03"
-version: 0.0.0
+version: 0.1.0
