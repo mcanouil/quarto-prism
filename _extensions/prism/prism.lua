@@ -31,9 +31,6 @@
 ---     1 + 1
 ---     ```
 
---- Extension name constant
-local EXTENSION_NAME = 'prism'
-
 --- Rewrite the `attributes` table of an element by resolving format prefixes.
 --- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock The element to process.
 --- @return pandoc.Div|pandoc.Span|pandoc.CodeBlock|nil
