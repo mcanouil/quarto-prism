@@ -3,9 +3,11 @@ title: "Prism Extension for Quarto"
 message: "If you use this project, please cite it as below."
 type: software
 authors:
-  - name: "Mickaël Canouil"
+  - family-names: "Canouil"
+    given-names: "Mickaël"
+    orcid: "https://orcid.org/0000-0002-3396-4549"
 repository-code: "https://github.com/mcanouil/quarto-prism"
-url: "https://mcanouil.github.io/quarto-prism/"
+url: "https://m.canouil.dev/quarto-prism/"
 license: "MIT License"
 date-released: "2026-05-03"
 version: 0.0.0

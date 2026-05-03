@@ -4,41 +4,77 @@
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
 --- @version 0.0.0
---- @brief Pandoc AST filter for prism.
---- @description A Quarto extension.
+--- @brief Promote attributes whose key prefix matches the active rendering format.
+--- @description
+---   Reads attributes whose key follows the `format:name` pattern on `Div`,
+---   `Span`, and `CodeBlock` elements.
+---
+---   When the `format` prefix matches the active rendering format (resolved via
+---   `quarto.doc.is_format`, which understands aliases such as `html` matching
+---   `astek-html`), the attribute is re-emitted as `name="value"` and the
+---   prefixed key is removed.
+---   When the prefix does not match, the attribute is dropped.
+---   Attributes whose key contains no colon are passed through unchanged.
+---
+---   Promoted attributes are appended after the kept ones, so a conditional
+---   value overrides a static one with the same name.
+---
+---   The filter only inspects key-value attributes; classes and ids are left
+---   untouched.
+---
+---   Usage:
+---     ::: {revealjs:style="font-size: 2em;" html:style="font-size: 1.2rem;"}
+---     Conditional content.
+---     :::
+---
+---     ```{.r revealjs:style="font-size: 0.6em;"}
+---     1 + 1
+---     ```
 
 --- Extension name constant
 local EXTENSION_NAME = 'prism'
 
---- Load modules as needed:
---- local str = require(quarto.utils.resolve_path('_modules/string.lua'):gsub('%.lua$', ''))
---- local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
---- local meta = require(quarto.utils.resolve_path('_modules/metadata.lua'):gsub('%.lua$', ''))
-
---- Process Div elements
---- @param el pandoc.Div
---- @return pandoc.Div
-local function process_div(el)
-  -- Check if this div should be processed
-  if not el.classes:includes('prism') then
-    return el
+--- Rewrite the `attributes` table of an element by resolving format prefixes.
+--- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock The element to process.
+--- @return pandoc.Div|pandoc.Span|pandoc.CodeBlock|nil
+local function process(el)
+  if #el.attributes == 0 then
+    return nil
   end
 
-  -- Process the element
-  -- Add your transformation logic here
+  local kept = {}
+  local promoted = {}
+  local promoted_names = {}
 
-  return el
-end
+  for _, kv in ipairs(el.attributes) do
+    local key, value = kv[1], kv[2]
+    local prefix, name = key:match("^([^:]+):(.+)$")
+    if prefix and name then
+      if quarto.doc.is_format(prefix) then
+        table.insert(promoted, { name, value })
+        promoted_names[name] = true
+      end
+    else
+      table.insert(kept, { key, value })
+    end
+  end
 
---- Process Header elements
---- @param el pandoc.Header
---- @return pandoc.Header
-local function process_header(el)
-  -- Add header processing logic here
+  -- Drop static attributes whose name is also promoted, so the format-scoped
+  -- value wins and Pandoc does not see a duplicate-attribute warning.
+  local final = {}
+  for _, kv in ipairs(kept) do
+    if not promoted_names[kv[1]] then
+      table.insert(final, kv)
+    end
+  end
+  for _, kv in ipairs(promoted) do
+    table.insert(final, kv)
+  end
+
+  el.attributes = final
   return el
 end
 
 return {
-  { Div = process_div },
-  { Header = process_header }
+  { Div = process, Span = process, CodeBlock = process }
 }

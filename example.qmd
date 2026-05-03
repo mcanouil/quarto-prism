@@ -7,39 +7,44 @@ filters:
   - prism
 ---
 
-## Basic Usage
+## Format-scoped attributes on Divs
 
-Apply the filter using the `prism` class:
+The next block shows the same Div with two format-scoped `style` values.
+When rendered to HTML the `html:` prefix wins; when rendered to revealjs the `revealjs:` prefix wins.
+The unprefixed `data-note` attribute is preserved in every format.
 
-::: {.prism}
-This content will be processed by the filter.
+::: {data-note="kept everywhere" html:style="color: hotpink;" revealjs:style="font-size: 2em;"}
+This paragraph is pink in HTML and large in revealjs.
 :::
 
-## With Options
+## Override behaviour
 
-Pass options as attributes:
+A format-scoped attribute appended after a static attribute of the same name overrides it.
+In HTML the resolved `style` value is the HTML one.
 
-::: {.prism option1="value1"}
-This content has custom options applied.
+::: {style="color: gray;" html:style="color: rebeccapurple;"}
+This paragraph reads as purple in HTML.
 :::
 
-## Multiple Options
+## Format-scoped attributes on Spans
 
-Combine multiple options:
+Inline content can carry format-scoped attributes too.
+The next sentence styles a [single span]{html:style="background: yellow; padding: 0 0.2em;" pdf:style="\\hl{...}"} only when the active format matches.
 
-::: {.prism option1="value1" option2="value2"}
-This content has multiple options applied.
-:::
+## Format-scoped attributes on CodeBlocks
 
-## Nested Content
+CodeBlocks accept the same syntax.
+The HTML output renders this code block with a tinted background.
 
-The filter handles nested content:
+```{.r html:style="background: #f6f8fa; padding: 0.5em;"}
+1 + 1
+```
 
-::: {.prism}
-### Heading Inside Filter
+## Unmatched prefixes are dropped
 
-- List item 1.
-- List item 2.
+Prefixes that do not resolve to the active format are removed entirely.
+The following Div has only `pdf:` and `docx:` attributes; under HTML it renders with no extra attributes.
 
-Paragraph with **bold** and *italic* text.
+::: {pdf:style="font-size: 12pt;" docx:custom-style="Note"}
+Plain content in HTML; styled in PDF and DOCX.
 :::
