@@ -1,0 +1,142 @@
+---
+title: "Prism Quarto Extension"
+subtitle: "Quarto Extension"
+author:
+  - name: "Mickaël CANOUIL, _Ph.D._"
+    orcid: "0000-0002-3396-4549"
+    url: "https://mickael.canouil.fr"
+format:
+  html:
+    output-file: index
+    toc: true
+    embed-resources: true
+  typst:
+    output-file: prism-typst
+    papersize: a4
+    margin:
+      x: 2.5cm
+      y: 2.5cm
+  revealjs:
+    output-file: prism-revealjs
+    embed-resources: true
+    smaller: true
+format-links: true
+filters:
+  - prism
+---
+
+The `prism` filter lets a single Div, Span, or CodeBlock carry **conditional attributes**: each output format picks its own values from format-prefixed keys, so the same prose or code can be styled differently in HTML, revealjs, and Typst without duplication.
+
+Attributes are keyed `format:name="value"`.
+At render time, attributes whose `format` matches the active output are re-emitted as `name="value"`; the rest are dropped.
+Unprefixed attributes pass through unchanged.
+
+## How prefixes resolve
+
+Prism matches each prefix against the **target format** of the current render, resolved from `quarto.format.format_identifier()["target-format"]`.
+Matching is **exact**, so `html:` targets HTML output without affecting revealjs.
+
+This document is rendered to three formats:
+
+| Active format | Matching prefix |
+| ------------- | --------------- |
+| `html`        | `html:`         |
+| `revealjs`    | `revealjs:`     |
+| `typst`       | `typst:`        |
+
+## Format-scoped attributes on Divs
+
+Each prefix is independent: `html:style` is applied only under HTML, `revealjs:style` only under revealjs, and `typst:fill` only under Typst.
+The unprefixed `note` attribute is preserved everywhere.
+
+```markdown
+::: {
+  note="kept everywhere"
+  html:style="color: hotpink;"
+  revealjs:style="color: deepskyblue;"
+  typst:fill='rgb("#b22222")'
+}
+This paragraph is pink in HTML, blue in revealjs, and unstyled in Typst.
+:::
+```
+
+::: {
+  note="kept everywhere"
+  html:style="color: hotpink;"
+  revealjs:style="color: deepskyblue;"
+  typst:fill='rgb("#b22222")'
+}
+This paragraph is pink in HTML, blue in revealjs, and unstyled in Typst.
+:::
+
+## Override behaviour
+
+A format-scoped attribute overrides a static attribute of the same name.
+Under HTML the `html:` value wins; under revealjs the `revealjs:` value wins; under Typst no prefix matches, so the static `gray` is kept.
+
+```markdown
+::: {
+  style="color: gray;"
+  html:style="color: rebeccapurple;"
+  revealjs:style="color: forestgreen;"
+}
+This paragraph reads as purple in HTML, green in revealjs, and gray in Typst.
+:::
+```
+
+::: {
+  style="color: gray;"
+  html:style="color: rebeccapurple;"
+  revealjs:style="color: forestgreen;"
+}
+This paragraph reads as purple in HTML, green in revealjs, and gray in Typst.
+:::
+
+## Format-scoped attributes on Spans
+
+Inline content carries format-scoped attributes the same way.
+
+```markdown
+The next sentence styles a
+[single span]{html:style="background: yellow; padding: 0 0.2em;" revealjs:style="background: lightyellow; padding: 0 0.2em;"}
+only under the matching format.
+```
+
+The next sentence styles a [single span]{html:style="background: yellow; padding: 0 0.2em;" revealjs:style="background: lightyellow; padding: 0 0.2em;"} only under the matching format.
+
+## Format-scoped attributes on CodeBlocks
+
+CodeBlocks accept the same syntax.
+
+````markdown
+```{
+  .r
+  html:style="background: #f6f8fa; padding: 0.5em;"
+  revealjs:style="background: #1f2937; color: #e5e7eb; padding: 0.5em;"
+}
+1 + 1
+```
+````
+
+```{
+  .r
+  html:style="background: #f6f8fa; padding: 0.5em;"
+  revealjs:style="background: #1f2937; color: #e5e7eb; padding: 0.5em;"
+}
+1 + 1
+```
+
+## Unmatched prefixes are dropped
+
+Prefixes that do not resolve to the active target format are removed entirely.
+The next Div carries only `revealjs:` and `typst:` attributes; under HTML it therefore renders as plain content with no `style` attribute.
+
+```markdown
+::: {revealjs:style="color: indigo;" typst:fill='rgb("#0d9488")'}
+Plain content in HTML; styled in revealjs and Typst.
+:::
+```
+
+::: {revealjs:style="color: indigo;" typst:fill='rgb("#0d9488")'}
+Plain content in HTML; styled in revealjs and Typst.
+:::

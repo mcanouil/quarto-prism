@@ -1,0 +1,3 @@
+# Authored .qmd content uses indentation inside multi-line attribute blocks
+# for readability; prettier's markdown formatter would flush them to column 0.
+example.qmd

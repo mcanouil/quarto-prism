@@ -1,0 +1,13 @@
+# _schema.yml for "prism" filter extension
+# Describes attributes for IDE tooling and runtime validation.
+
+# Attributes accepted by the filter on Div, Span, and CodeBlock elements.
+# Keys follow the `format:name` pattern, where `format` is matched exactly
+# against the Quarto target format resolved from
+# `quarto.format.format_identifier()["target-format"]` (e.g. `html`,
+# `revealjs`, `typst`, `latex`, `mcanouil-typst`).
+# When the prefix matches the active target format, the attribute is
+# re-emitted as `name="value"`; otherwise it is dropped.
+# Used in: ::: {revealjs:style="font-size: 2em;" html:style="font-size: 1.2rem;"}
+
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v1/extension-schema.json
