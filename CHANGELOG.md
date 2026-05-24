@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 (2026-05-24)
+
 ### New Features
 
 - feat: Add the `slide` format-group alias, which matches every HTML slide format (`revealjs`, `slidy`, `s5`, `dzslides`, `slideous`), so a single prefix can target the whole group.
