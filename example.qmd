@@ -140,3 +140,47 @@ Plain content in HTML; styled in revealjs and Typst.
 ::: {revealjs:style="color: indigo;" typst:fill='rgb("#0d9488")'}
 Plain content in HTML; styled in revealjs and Typst.
 :::
+
+## Format-group aliases
+
+The `slide` alias matches every HTML slide format: `revealjs`, `slidy`, `s5`, `dzslides`, and `slideous`.
+A single `slide:` prefix targets the whole group, so the next Div is styled under revealjs without naming each slide format.
+Under HTML and Typst no slide format is active, so the `slide:` value is dropped.
+
+```markdown
+::: {slide:style="color: chocolate;"}
+Styled under any HTML slide format; plain in HTML and Typst.
+:::
+```
+
+::: {slide:style="color: chocolate;"}
+Styled under any HTML slide format; plain in HTML and Typst.
+:::
+
+An exact format prefix wins over the `slide` alias for the same attribute name.
+Under revealjs the `revealjs:` value applies; under any other slide format the `slide:` value would apply instead.
+
+```markdown
+::: {slide:style="color: teal;" revealjs:style="color: crimson;"}
+Crimson under revealjs, teal under the other slide formats.
+:::
+```
+
+::: {slide:style="color: teal;" revealjs:style="color: crimson;"}
+Crimson under revealjs, teal under the other slide formats.
+:::
+
+## Default fallback
+
+A `default:name` prefix provides a fallback value, applied only when no format-specific variant of the same name matched the active format.
+Under HTML the `html:` value wins; under revealjs and Typst no specific variant matches, so the `default:` value is used.
+
+```markdown
+::: {default:style="color: gray;" html:style="color: rebeccapurple;"}
+Purple under HTML, gray under revealjs and Typst.
+:::
+```
+
+::: {default:style="color: gray;" html:style="color: rebeccapurple;"}
+Purple under HTML, gray under revealjs and Typst.
+:::

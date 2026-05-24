@@ -62,14 +62,50 @@ PDF outputs render through Pandoc's `latex` writer; target them with `latex:` (t
 A static attribute of the same name is kept and overridden by a format-scoped attribute that resolves, which lets you write defaults plus format-specific overrides on the same element.
 When two format-scoped attributes share the same target name on the same element (_e.g._, two `html:style` keys), the last one in source order wins.
 
+### Format-group aliases
+
+A prefix can target a group of formats instead of a single one.
+The `slide` alias matches every HTML slide format: `revealjs`, `slidy`, `s5`, `dzslides`, and `slideous`.
+So `slide:style="font-size: 2em;"` applies under any of those formats, without repeating the same value once per format.
+
+```markdown
+::: {slide:style="font-size: 2em;"}
+Larger text on every HTML slide format.
+:::
+```
+
+An exact format prefix always wins over the `slide` alias for the same attribute name.
+Under `revealjs`, the element below resolves to the `revealjs:` value, while under `slidy` it resolves to the `slide:` value.
+
+```markdown
+::: {slide:style="color: teal;" revealjs:style="color: crimson;"}
+Crimson under revealjs, teal under the other slide formats.
+:::
+```
+
+### Default fallback
+
+A `default:name="value"` prefix provides a fallback value, applied only when no format-specific variant of the same `name` matched the active format.
+This lets you set a baseline value and override it only where needed.
+
+```markdown
+::: {default:style="color: gray;" html:style="color: rebeccapurple;"}
+Purple under HTML, gray under every other format.
+:::
+```
+
+The precedence for a given attribute name is: exact format match, then `slide` alias match, then `default` fallback, then an unprefixed value passed through unchanged.
+
 ### Syntax
 
-| Pattern              | Behaviour                                                          |
-| -------------------- | ------------------------------------------------------------------ |
-| `format:name="..."`  | Promoted to `name="..."` when `format` matches; dropped otherwise. |
-| `name="..."`         | Passed through unchanged.                                          |
-| Classes (`.foo`)     | Untouched.                                                         |
-| Identifiers (`#foo`) | Untouched.                                                         |
+| Pattern               | Behaviour                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `format:name="..."`   | Promoted to `name="..."` when `format` matches the active format; dropped otherwise. |
+| `slide:name="..."`    | Promoted when the active format is `revealjs`, `slidy`, `s5`, `dzslides`, `slideous`.|
+| `default:name="..."`  | Promoted only when no format-specific variant of `name` matched.                     |
+| `name="..."`          | Passed through unchanged.                                                            |
+| Classes (`.foo`)      | Untouched.                                                                            |
+| Identifiers (`#foo`)  | Untouched.                                                                            |
 
 ## Example
 
