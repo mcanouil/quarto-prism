@@ -1,5 +1,5 @@
 --- Prism - Filter
---- @module prism
+--- @module "prism"
 --- @license MIT License
 --- @copyright 2026 Mickaël Canouil
 --- @author Mickaël Canouil
