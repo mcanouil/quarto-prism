@@ -8,18 +8,28 @@
 ---   Reads attributes whose key follows the `format:name` pattern on `Div`,
 ---   `Span`, and `CodeBlock` elements.
 ---
----   The `format` prefix is matched exactly against the Quarto target format,
+---   The `format` prefix is matched against the Quarto target format,
 ---   resolved from `quarto.format.format_identifier()["target-format"]`
 ---   (falling back to the Pandoc `FORMAT` global). The target format is the
 ---   user-declared format name and includes Quarto custom formats, so a
 ---   custom format such as `mcanouil-typst` is distinct from its base writer
----   `typst`. Matching is intentionally not alias-aware, so `html:` targets
----   HTML output without also affecting revealjs.
+---   `typst`. Matching is exact for individual format names, so `html:`
+---   targets HTML output without also affecting revealjs.
+---
+---   In addition to exact format names, the `slide` alias matches every HTML
+---   slide format (revealjs, slidy, s5, dzslides, slideous), so `slide:` can
+---   target the whole group at once.
+---
+---   A `default:name` prefix provides a fallback value, applied only when no
+---   format-specific variant of the same `name` matched the active format.
 ---
 ---   When the prefix matches, the attribute is re-emitted as `name="value"`
 ---   and the prefixed key is removed.
 ---   When the prefix does not match, the attribute is dropped.
 ---   Attributes whose key contains no colon are passed through unchanged.
+---
+---   Precedence for a given `name`: exact format match > alias match >
+---   default fallback > unprefixed pass-through.
 ---
 ---   Promoted attributes override static ones with the same name. When two
 ---   format-scoped attributes share the same target name on the same element
@@ -31,6 +41,10 @@
 ---   Usage:
 ---     ::: {html:style="font-size: 1.2rem;" revealjs:style="font-size: 2em;"}
 ---     Conditional content.
+---     :::
+---
+---     ::: {slide:style="font-size: 2em;" default:style="font-size: 1rem;"}
+---     Larger on every slide format, smaller everywhere else.
 ---     :::
 ---
 ---     ```{.r mcanouil-typst:width="50%"}
@@ -54,6 +68,45 @@ end
 
 local TARGET_FORMAT = resolve_target_format()
 
+--- The `default` prefix names a fallback value, applied only when no
+--- format-specific variant of the same attribute name matched.
+local DEFAULT_PREFIX = "default"
+
+--- HTML slide formats grouped under the `slide` alias. This list is shared
+--- with quarto-portable-links so the two extensions agree on what counts as
+--- an HTML slide format.
+--- @type table<string, boolean>
+local SLIDE_FORMATS = {
+  revealjs = true,
+  slidy = true,
+  s5 = true,
+  dzslides = true,
+  slideous = true,
+}
+
+--- Aliases that match a group of formats rather than an exact format name.
+--- Each value is the set of target formats the alias resolves to.
+--- @type table<string, table<string, boolean>>
+local FORMAT_ALIASES = {
+  slide = SLIDE_FORMATS,
+}
+
+--- Resolve how a prefix matches the active target format.
+--- Exact format names match identically; group aliases match when the active
+--- target format is a member of the alias set.
+--- @param prefix string The attribute key prefix (the part before the colon).
+--- @return "exact"|"alias"|nil The match kind, or nil when the prefix does not match.
+local function match_prefix(prefix)
+  if prefix == TARGET_FORMAT then
+    return "exact"
+  end
+  local alias = FORMAT_ALIASES[prefix]
+  if alias and alias[TARGET_FORMAT] then
+    return "alias"
+  end
+  return nil
+end
+
 --- Rewrite the `attributes` table of an element by resolving format prefixes.
 --- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock The element to process.
 --- @return pandoc.Div|pandoc.Span|pandoc.CodeBlock|nil
@@ -65,19 +118,41 @@ local function process(el)
   local kept = {}
   local promoted_order = {}
   local promoted_value = {}
+  local promoted_kind = {}
+  local default_order = {}
+  local default_value = {}
 
   for _, kv in ipairs(el.attributes) do
     local key, value = kv[1], kv[2]
     local prefix, name = key:match("^([^:]+):(.+)$")
     if prefix and name then
-      if prefix == TARGET_FORMAT then
-        if promoted_value[name] == nil then
-          table.insert(promoted_order, name)
+      if prefix == DEFAULT_PREFIX then
+        if default_value[name] == nil then
+          table.insert(default_order, name)
         end
-        promoted_value[name] = value
+        default_value[name] = value
+      else
+        local kind = match_prefix(prefix)
+        -- An exact match always wins over an alias match for the same name.
+        if kind == "exact" or (kind == "alias" and promoted_kind[name] ~= "exact") then
+          if promoted_value[name] == nil then
+            table.insert(promoted_order, name)
+          end
+          promoted_value[name] = value
+          promoted_kind[name] = kind
+        end
       end
     else
       table.insert(kept, { key, value })
+    end
+  end
+
+  -- A default fallback applies only when no format-specific variant of the
+  -- same name matched the active target format.
+  for _, name in ipairs(default_order) do
+    if promoted_value[name] == nil then
+      table.insert(promoted_order, name)
+      promoted_value[name] = default_value[name]
     end
   end
 

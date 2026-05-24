@@ -2,10 +2,13 @@
 # Describes attributes for IDE tooling and runtime validation.
 
 # Attributes accepted by the filter on Div, Span, and CodeBlock elements.
-# Keys follow the `format:name` pattern, where `format` is matched exactly
-# against the Quarto target format resolved from
+# Keys follow the `format:name` pattern, where `format` is matched against
+# the Quarto target format resolved from
 # `quarto.format.format_identifier()["target-format"]` (e.g. `html`,
 # `revealjs`, `typst`, `latex`, `mcanouil-typst`).
+# The `slide` alias matches every HTML slide format (revealjs, slidy, s5,
+# dzslides, slideous). The `default` prefix names a fallback value, applied
+# only when no format-specific variant of the same name matched.
 # When the prefix matches the active target format, the attribute is
 # re-emitted as `name="value"`; otherwise it is dropped.
 # Used in: ::: {revealjs:style="font-size: 2em;" html:style="font-size: 1.2rem;"}
