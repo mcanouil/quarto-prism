@@ -184,3 +184,31 @@ Purple under HTML, gray under revealjs and Typst.
 ::: {default:style="color: gray;" html:style="color: rebeccapurple;"}
 Purple under HTML, gray under revealjs and Typst.
 :::
+
+## Conflict between static, `default:`, and exact prefix
+
+When the same attribute name carries a static unprefixed value, a `default:` fallback, and a format-scoped value, the higher-rank entry wins and the others are dropped from the output.
+Under HTML the exact `html:` value wins; under revealjs and Typst no exact match exists, so the `default:` value wins; the static `gray` is never used because `default:` always outranks it.
+
+```markdown
+::: {style="color: gray;" default:style="color: silver;" html:style="color: crimson;"}
+Crimson under HTML, silver under revealjs and Typst, never gray.
+:::
+```
+
+::: {style="color: gray;" default:style="color: silver;" html:style="color: crimson;"}
+Crimson under HTML, silver under revealjs and Typst, never gray.
+:::
+
+## Surface typos with `warn-on-drop`
+
+Format-scoped attributes whose prefix does not match are silently dropped by default.
+Set `extensions.prism.warn-on-drop: true` to emit a Quarto warning each time this happens, which makes typos in prefixes visible during render.
+
+```yaml
+extensions:
+  prism:
+    warn-on-drop: true
+```
+
+A typo such as `revaeljs:style="..."` then surfaces in the build log as `(W) [prism] Dropped attribute(s) 'revaeljs:style' on #mybox because no prefix matched target format 'revealjs'.`.

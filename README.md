@@ -94,18 +94,66 @@ Purple under HTML, gray under every other format.
 :::
 ```
 
-The precedence for a given attribute name is: exact format match, then `slide` alias match, then `default` fallback, then an unprefixed value passed through unchanged.
+### Precedence
+
+For a given attribute name on the same element, the resolved value is chosen in this order:
+
+| Rank | Source                             | Example                               |
+| ---- | ---------------------------------- | ------------------------------------- |
+| 1    | Exact format match.                | `html:style="..."` under `html`.      |
+| 2    | Group-alias match (e.g. `slide:`). | `slide:style="..."` under `revealjs`. |
+| 3    | `default:` fallback.               | `default:style="..."`.                |
+| 4    | Unprefixed pass-through.           | `style="..."`.                        |
+
+When two entries share the same rank for the same attribute name (e.g. two `html:style` keys, or two `slide:style` keys), the last one in source order wins.
+
+A static unprefixed attribute is dropped from the output whenever a higher-rank entry resolves to the same name; otherwise it is passed through unchanged.
+This guarantees a single value per attribute name and avoids Pandoc's duplicate-attribute warning.
+
+The promoted attributes appear after the unprefixed kept attributes in the element's final attribute list, in the source order in which their target name first appeared.
+
+```markdown
+::: {style="color: gray;" default:style="color: silver;" html:style="color: crimson;"}
+Crimson in HTML (exact), silver elsewhere (default), and never gray because a higher-rank entry exists for `style`.
+:::
+```
+
+### Unknown prefixes
+
+A prefix is "known" when it equals an exact format name, a group alias such as `slide`, or `default`.
+Any other prefix is treated as a non-matching format and the attribute is dropped.
+This is intentional, since a future format with that name would then resolve the attribute; but it also hides typos such as `revaeljs:style` until you set `extensions.prism.warn-on-drop: true`.
+
+### Options
+
+| Option         | Type    | Default | Description                                                                                     |
+| -------------- | ------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `warn-on-drop` | boolean | `false` | Emit a Quarto warning each time a format-scoped attribute is dropped because no prefix matched. |
+
+Enable it for a document or project via the front matter:
+
+```yaml
+extensions:
+  prism:
+    warn-on-drop: true
+```
+
+A typo such as `revaeljs:style="..."` then surfaces during render as:
+
+```text
+(W) [prism] Dropped attribute(s) 'revaeljs:style' on #mybox because no prefix matched target format 'revealjs'.
+```
 
 ### Syntax
 
-| Pattern               | Behaviour                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| `format:name="..."`   | Promoted to `name="..."` when `format` matches the active format; dropped otherwise. |
-| `slide:name="..."`    | Promoted when the active format is `revealjs`, `slidy`, `s5`, `dzslides`, `slideous`.|
-| `default:name="..."`  | Promoted only when no format-specific variant of `name` matched.                     |
-| `name="..."`          | Passed through unchanged.                                                            |
-| Classes (`.foo`)      | Untouched.                                                                            |
-| Identifiers (`#foo`)  | Untouched.                                                                            |
+| Pattern              | Behaviour                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| `format:name="..."`  | Promoted to `name="..."` when `format` matches the active format; dropped otherwise.  |
+| `slide:name="..."`   | Promoted when the active format is `revealjs`, `slidy`, `s5`, `dzslides`, `slideous`. |
+| `default:name="..."` | Promoted only when no format-specific variant of `name` matched.                      |
+| `name="..."`         | Passed through unchanged.                                                             |
+| Classes (`.foo`)     | Untouched.                                                                            |
+| Identifiers (`#foo`) | Untouched.                                                                            |
 
 ## Example
 
