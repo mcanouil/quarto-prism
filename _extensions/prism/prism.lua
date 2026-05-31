@@ -35,6 +35,12 @@
 ---   format-scoped attributes share the same target name on the same element
 ---   (e.g. two `html:style` keys), the last one in source order wins.
 ---
+---   Unknown prefixes (neither an exact format name, a known group alias,
+---   nor `default`) are treated as non-matching and the attribute is dropped.
+---   Enable `extensions.prism.warn-on-drop` to emit a `quarto.log.warning`
+---   each time a format-scoped attribute is dropped, which surfaces typos in
+---   prefixes that would otherwise vanish silently.
+---
 ---   The filter only inspects key-value attributes; classes and ids are left
 ---   untouched.
 ---
@@ -50,6 +56,12 @@
 ---     ```{.r mcanouil-typst:width="50%"}
 ---     1 + 1
 ---     ```
+
+--- Extension name constant, used to namespace log messages and metadata.
+local EXTENSION_NAME = 'prism'
+
+local slide_formats = require(quarto.utils.resolve_path('_modules/slide-formats.lua'):gsub('%.lua$', ''))
+local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
 
 --- Resolve the active Quarto target format name once per render.
 --- Strips Pandoc format variants (e.g. `html+raw_attribute` -> `html`) so
@@ -72,24 +84,19 @@ local TARGET_FORMAT = resolve_target_format()
 --- format-specific variant of the same attribute name matched.
 local DEFAULT_PREFIX = "default"
 
---- HTML slide formats grouped under the `slide` alias. This list is shared
---- with quarto-portable-links so the two extensions agree on what counts as
---- an HTML slide format.
---- @type table<string, boolean>
-local SLIDE_FORMATS = {
-  revealjs = true,
-  slidy = true,
-  s5 = true,
-  dzslides = true,
-  slideous = true,
-}
-
 --- Aliases that match a group of formats rather than an exact format name.
 --- Each value is the set of target formats the alias resolves to.
+--- The `slide` set is sourced from the shared `_modules/slide-formats` module
+--- so prism and portable-links agree on what counts as an HTML slide format.
 --- @type table<string, table<string, boolean>>
 local FORMAT_ALIASES = {
-  slide = SLIDE_FORMATS,
+  slide = slide_formats.formats,
 }
+
+--- Whether to emit a warning when a format-scoped attribute is dropped.
+--- Set per document via `extensions.prism.warn-on-drop: true`.
+--- @type boolean
+local warn_on_drop = false
 
 --- Resolve how a prefix matches the active target format.
 --- Exact format names match identically; group aliases match when the active
@@ -107,6 +114,20 @@ local function match_prefix(prefix)
   return nil
 end
 
+--- Describe an element for warning messages: prefer the id, then the first
+--- class, then the element tag.
+--- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock
+--- @return string
+local function describe_element(el)
+  if el.identifier and el.identifier ~= '' then
+    return '#' .. el.identifier
+  end
+  if el.classes and #el.classes > 0 then
+    return '.' .. el.classes[1]
+  end
+  return el.t or 'element'
+end
+
 --- Rewrite the `attributes` table of an element by resolving format prefixes.
 --- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock The element to process.
 --- @return pandoc.Div|pandoc.Span|pandoc.CodeBlock|nil
@@ -121,6 +142,7 @@ local function process(el)
   local promoted_kind = {}
   local default_order = {}
   local default_value = {}
+  local dropped = {}
 
   for _, kv in ipairs(el.attributes) do
     local key, value = kv[1], kv[2]
@@ -140,6 +162,8 @@ local function process(el)
           end
           promoted_value[name] = value
           promoted_kind[name] = kind
+        else
+          table.insert(dropped, key)
         end
       end
     else
@@ -169,10 +193,32 @@ local function process(el)
     table.insert(final, { name, promoted_value[name] })
   end
 
+  if warn_on_drop and #dropped > 0 then
+    log.log_warning(
+      EXTENSION_NAME,
+      "Dropped attribute(s) '" .. table.concat(dropped, "', '") ..
+        "' on " .. describe_element(el) ..
+        " because no prefix matched target format '" .. TARGET_FORMAT .. "'."
+    )
+  end
+
   el.attributes = final
   return el
 end
 
+--- Read the `extensions.prism.warn-on-drop` option from document metadata.
+--- @param meta table The document metadata table.
+--- @return nil
+local function read_options(meta)
+  local config = meta['extensions'] and meta['extensions'][EXTENSION_NAME]
+  if not config then return nil end
+  if config['warn-on-drop'] ~= nil then
+    warn_on_drop = pandoc.utils.stringify(config['warn-on-drop']) == 'true'
+  end
+  return nil
+end
+
 return {
+  { Meta = read_options },
   { Div = process, Span = process, CodeBlock = process }
 }

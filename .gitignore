@@ -11,3 +11,5 @@ docs/api/*.qmd
 *.typ
 *_files/
 .quarto/
+
+/.luarc.json
