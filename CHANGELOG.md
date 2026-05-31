@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0 (2026-05-31)
+
 ### New Features
 
 - feat: Add the `extensions.prism.warn-on-drop` option (default `false`) which emits a `quarto.log.warning` each time a format-scoped attribute is dropped because no prefix matched the active target format; useful to surface typos in prefixes that would otherwise vanish silently.
