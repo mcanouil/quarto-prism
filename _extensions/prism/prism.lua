@@ -6,7 +6,7 @@
 --- @brief Promote attributes whose key prefix matches the active Quarto target format.
 --- @description
 ---   Reads attributes whose key follows the `format:name` pattern on `Div`,
----   `Span`, and `CodeBlock` elements.
+---   `Span`, `CodeBlock`, and `Header` elements.
 ---
 ---   The `format` prefix is matched against the Quarto target format,
 ---   resolved from `quarto.format.format_identifier()["target-format"]`
@@ -116,7 +116,7 @@ end
 
 --- Describe an element for warning messages: prefer the id, then the first
 --- class, then the element tag.
---- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock
+--- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock|pandoc.Header
 --- @return string
 local function describe_element(el)
   if el.identifier and el.identifier ~= '' then
@@ -129,8 +129,8 @@ local function describe_element(el)
 end
 
 --- Rewrite the `attributes` table of an element by resolving format prefixes.
---- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock The element to process.
---- @return pandoc.Div|pandoc.Span|pandoc.CodeBlock|nil
+--- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock|pandoc.Header The element to process.
+--- @return pandoc.Div|pandoc.Span|pandoc.CodeBlock|pandoc.Header|nil
 local function process(el)
   if #el.attributes == 0 then
     return nil
@@ -220,5 +220,5 @@ end
 
 return {
   { Meta = read_options },
-  { Div = process, Span = process, CodeBlock = process }
+  { Div = process, Span = process, CodeBlock = process, Header = process }
 }

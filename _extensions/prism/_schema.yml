@@ -1,8 +1,8 @@
 # Schema for the prism extension
 #
 # The filter rewrites dynamic format-prefixed attributes (e.g. `revealjs:style`,
-# `html:style`, `slide:style`, `default:style`) on Div, Span, and CodeBlock
-# elements; these are dynamic prefixed keys, not a fixed attribute set, so only
+# `html:style`, `slide:style`, `default:style`) on Div, Span, CodeBlock, and
+# Header elements; these are dynamic prefixed keys, not a fixed attribute set, so only
 # the document option below is described here.
 
 $schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json

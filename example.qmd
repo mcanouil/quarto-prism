@@ -25,7 +25,7 @@ filters:
   - prism
 ---
 
-The `prism` filter lets a single Div, Span, or CodeBlock carry **conditional attributes**: each output format picks its own values from format-prefixed keys, so the same prose or code can be styled differently in HTML, revealjs, and Typst without duplication.
+The `prism` filter lets a single Div, Span, CodeBlock, or Heading carry **conditional attributes**: each output format picks its own values from format-prefixed keys, so the same prose or code can be styled differently in HTML, revealjs, and Typst without duplication.
 
 Attributes are keyed `format:name="value"`.
 At render time, attributes whose `format` matches the active output are re-emitted as `name="value"`; the rest are dropped.
@@ -125,6 +125,16 @@ CodeBlocks accept the same syntax.
 }
 1 + 1
 ```
+
+## Format-scoped attributes on headings
+
+Headings carry format-scoped attributes through their `{...}` attribute block.
+
+```markdown
+### Styled heading {html:style="color: hotpink;" revealjs:style="color: deepskyblue;" typst:fill='rgb("#b22222")'}
+```
+
+### Styled heading {html:style="color: hotpink;" revealjs:style="color: deepskyblue;" typst:fill='rgb("#b22222")'}
 
 ## Unmatched prefixes are dropped
 
