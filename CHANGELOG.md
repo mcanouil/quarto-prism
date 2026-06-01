@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.0 (2026-06-01)
+
 ### New Features
 
 - feat: Resolve format-prefixed attributes on headings (`## Heading {html:style="..."}`), matching the existing behaviour on Div, Span, and CodeBlock elements.
