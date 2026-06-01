@@ -126,6 +126,16 @@ CodeBlocks accept the same syntax.
 1 + 1
 ```
 
+## Format-scoped attributes on headings
+
+Headings carry format-scoped attributes through their `{...}` attribute block.
+
+```markdown
+### Styled heading {html:style="color: hotpink;" revealjs:style="color: deepskyblue;" typst:fill='rgb("#b22222")'}
+```
+
+### Styled heading {html:style="color: hotpink;" revealjs:style="color: deepskyblue;" typst:fill='rgb("#b22222")'}
+
 ## Unmatched prefixes are dropped
 
 Prefixes that do not resolve to the active target format are removed entirely.

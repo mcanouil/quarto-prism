@@ -1,6 +1,6 @@
 # Prism Extension for Quarto
 
-A Quarto filter for **conditional attributes**: attach format-specific attributes to a single Div, Span, or CodeBlock and have each format pick its own.
+A Quarto filter for **conditional attributes**: attach format-specific attributes to a single Div, Span, CodeBlock, or Heading and have each format pick its own.
 Style a paragraph one way in HTML, another in revealjs, another in Typst, all without duplicating the prose or the code under separate `content-visible` blocks.
 
 Each attribute is keyed `format:name="value"`.
@@ -36,6 +36,8 @@ Conditional content.
 :::
 
 [Inline span]{html:style="background: yellow;"}
+
+## Heading {html:style="color: hotpink;" revealjs:style="color: deepskyblue;"}
 
 ```{.r revealjs:style="font-size: 0.6em;"}
 1 + 1
