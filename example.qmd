@@ -7,7 +7,6 @@ author:
     url: "https://mickael.canouil.fr"
 format:
   html:
-    output-file: index
     toc: true
     embed-resources: true
   typst:
@@ -25,200 +24,32 @@ filters:
   - prism
 ---
 
-The `prism` filter lets a single Div, Span, CodeBlock, or Heading carry **conditional attributes**: each output format picks its own values from format-prefixed keys, so the same prose or code can be styled differently in HTML, revealjs, and Typst without duplication.
-
-Attributes are keyed `format:name="value"`.
-At render time, attributes whose `format` matches the active output are re-emitted as `name="value"`; the rest are dropped.
-Unprefixed attributes pass through unchanged.
-
-## How prefixes resolve
-
-Prism matches each prefix against the **target format** of the current render, resolved from `quarto.format.format_identifier()["target-format"]`.
-Matching is **exact**, so `html:` targets HTML output without affecting revealjs.
-
-This document is rendered to three formats:
-
-| Active format | Matching prefix |
-| ------------- | --------------- |
-| `html`        | `html:`         |
-| `revealjs`    | `revealjs:`     |
-| `typst`       | `typst:`        |
-
-## Format-scoped attributes on Divs
-
-Each prefix is independent: `html:style` is applied only under HTML, `revealjs:style` only under revealjs, and `typst:fill` only under Typst.
-The unprefixed `note` attribute is preserved everywhere.
+An attribute keyed `format:name` is used as `name` when that format is the one being rendered, and dropped otherwise.
 
 ```markdown
-::: {
-  note="kept everywhere"
-  html:style="color: hotpink;"
-  revealjs:style="color: deepskyblue;"
-  typst:fill='rgb("#b22222")'
-}
-This paragraph is pink in HTML, blue in revealjs, and unstyled in Typst.
+::: {html:style="color: firebrick;" revealjs:style="color: deepskyblue;"}
+Firebrick on a page, deep sky blue on a slide.
 :::
 ```
 
-::: {
-  note="kept everywhere"
-  html:style="color: hotpink;"
-  revealjs:style="color: deepskyblue;"
-  typst:fill='rgb("#b22222")'
-}
-This paragraph is pink in HTML, blue in revealjs, and unstyled in Typst.
+::: {html:style="color: firebrick;" revealjs:style="color: deepskyblue;"}
+Firebrick on a page, deep sky blue on a slide.
 :::
 
-## Override behaviour
-
-A format-scoped attribute overrides a static attribute of the same name.
-Under HTML the `html:` value wins; under revealjs the `revealjs:` value wins; under Typst no prefix matches, so the static `gray` is kept.
+`slide:` covers every HTML slide format at once, and `default:` supplies a value for the formats that name none.
 
 ```markdown
-::: {
-  style="color: gray;"
-  html:style="color: rebeccapurple;"
-  revealjs:style="color: forestgreen;"
-}
-This paragraph reads as purple in HTML, green in revealjs, and gray in Typst.
+::: {default:style="color: grey;" html:style="color: rebeccapurple;"}
+Rebecca purple in HTML, grey everywhere else.
 :::
 ```
 
-::: {
-  style="color: gray;"
-  html:style="color: rebeccapurple;"
-  revealjs:style="color: forestgreen;"
-}
-This paragraph reads as purple in HTML, green in revealjs, and gray in Typst.
+::: {default:style="color: grey;" html:style="color: rebeccapurple;"}
+Rebecca purple in HTML, grey everywhere else.
 :::
 
-## Format-scoped attributes on Spans
+The prefix is the name of the format Quarto targets, so a custom format is written by its own name rather than the writer beneath it, and PDF is `latex:`.
 
-Inline content carries format-scoped attributes the same way.
+Set `warn-on-drop` under `extensions.prism` to catch a mistyped prefix, which is otherwise indistinguishable from a format that is simply not active.
 
-```markdown
-The next sentence styles a
-[single span]{html:style="background: yellow; padding: 0 0.2em;" revealjs:style="background: lightyellow; padding: 0 0.2em;"}
-only under the matching format.
-```
-
-The next sentence styles a [single span]{html:style="background: yellow; padding: 0 0.2em;" revealjs:style="background: lightyellow; padding: 0 0.2em;"} only under the matching format.
-
-## Format-scoped attributes on CodeBlocks
-
-CodeBlocks accept the same syntax.
-
-````markdown
-```{
-  .r
-  html:style="background: #f6f8fa; padding: 0.5em;"
-  revealjs:style="background: #1f2937; color: #e5e7eb; padding: 0.5em;"
-}
-1 + 1
-```
-````
-
-```{
-  .r
-  html:style="background: #f6f8fa; padding: 0.5em;"
-  revealjs:style="background: #1f2937; color: #e5e7eb; padding: 0.5em;"
-}
-1 + 1
-```
-
-## Format-scoped attributes on headings
-
-Headings carry format-scoped attributes through their `{...}` attribute block.
-
-```markdown
-### Styled heading {html:style="color: hotpink;" revealjs:style="color: deepskyblue;" typst:fill='rgb("#b22222")'}
-```
-
-### Styled heading {html:style="color: hotpink;" revealjs:style="color: deepskyblue;" typst:fill='rgb("#b22222")'}
-
-## Unmatched prefixes are dropped
-
-Prefixes that do not resolve to the active target format are removed entirely.
-The next Div carries only `revealjs:` and `typst:` attributes; under HTML it therefore renders as plain content with no `style` attribute.
-
-```markdown
-::: {revealjs:style="color: indigo;" typst:fill='rgb("#0d9488")'}
-Plain content in HTML; styled in revealjs and Typst.
-:::
-```
-
-::: {revealjs:style="color: indigo;" typst:fill='rgb("#0d9488")'}
-Plain content in HTML; styled in revealjs and Typst.
-:::
-
-## Format-group aliases
-
-The `slide` alias matches every HTML slide format: `revealjs`, `slidy`, `s5`, `dzslides`, and `slideous`.
-A single `slide:` prefix targets the whole group, so the next Div is styled under revealjs without naming each slide format.
-Under HTML and Typst no slide format is active, so the `slide:` value is dropped.
-
-```markdown
-::: {slide:style="color: chocolate;"}
-Styled under any HTML slide format; plain in HTML and Typst.
-:::
-```
-
-::: {slide:style="color: chocolate;"}
-Styled under any HTML slide format; plain in HTML and Typst.
-:::
-
-An exact format prefix wins over the `slide` alias for the same attribute name.
-Under revealjs the `revealjs:` value applies; under any other slide format the `slide:` value would apply instead.
-
-```markdown
-::: {slide:style="color: teal;" revealjs:style="color: crimson;"}
-Crimson under revealjs, teal under the other slide formats.
-:::
-```
-
-::: {slide:style="color: teal;" revealjs:style="color: crimson;"}
-Crimson under revealjs, teal under the other slide formats.
-:::
-
-## Default fallback
-
-A `default:name` prefix provides a fallback value, applied only when no format-specific variant of the same name matched the active format.
-Under HTML the `html:` value wins; under revealjs and Typst no specific variant matches, so the `default:` value is used.
-
-```markdown
-::: {default:style="color: gray;" html:style="color: rebeccapurple;"}
-Purple under HTML, gray under revealjs and Typst.
-:::
-```
-
-::: {default:style="color: gray;" html:style="color: rebeccapurple;"}
-Purple under HTML, gray under revealjs and Typst.
-:::
-
-## Conflict between static, `default:`, and exact prefix
-
-When the same attribute name carries a static unprefixed value, a `default:` fallback, and a format-scoped value, the higher-rank entry wins and the others are dropped from the output.
-Under HTML the exact `html:` value wins; under revealjs and Typst no exact match exists, so the `default:` value wins; the static `gray` is never used because `default:` always outranks it.
-
-```markdown
-::: {style="color: gray;" default:style="color: silver;" html:style="color: crimson;"}
-Crimson under HTML, silver under revealjs and Typst, never gray.
-:::
-```
-
-::: {style="color: gray;" default:style="color: silver;" html:style="color: crimson;"}
-Crimson under HTML, silver under revealjs and Typst, never gray.
-:::
-
-## Surface typos with `warn-on-drop`
-
-Format-scoped attributes whose prefix does not match are silently dropped by default.
-Set `extensions.prism.warn-on-drop: true` to emit a Quarto warning each time this happens, which makes typos in prefixes visible during render.
-
-```yaml
-extensions:
-  prism:
-    warn-on-drop: true
-```
-
-A typo such as `revaeljs:style="..."` then surfaces in the build log as `(W) [prism] Dropped attribute(s) 'revaeljs:style' on #mybox because no prefix matched target format 'revealjs'.`.
+Full documentation: <https://m.canouil.dev/quarto-prism/>.

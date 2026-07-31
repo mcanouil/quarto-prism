@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Documentation
+
+- docs: Add a documentation website under `docs/`, built on the `atelier` project type and published to <https://m.canouil.dev/quarto-prism/>, with a Typst rendering of the same source so both branches of a prefix can be compared.
+- docs: Trim `README.md` to a landing page pointing at the website, and `example.qmd` to a short starting point to copy.
+- docs: Add the Pages workflow, which renders `docs/` on pull requests and deploys it from the release tag.
+- docs: Add the Quarto Extensions Updates workflow, scanning `docs` for the website's own dependencies.
+
 ## 0.4.1 (2026-06-08)
 
 - fix: move lua filter to pre-ast to ensure it runs before any filters (e.g., `cascade`).

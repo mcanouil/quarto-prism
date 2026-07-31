@@ -1,0 +1,86 @@
+---
+title: "Prism"
+subtitle: "One source, split into format-specific attributes."
+description: "What the prism extension is for, how to enable it, and the smallest attribute that differs between two output formats."
+authors:
+  - name: "Mickaël CANOUIL, _Ph.D._"
+    orcid: "0000-0002-3396-4549"
+    url: "https://mickael.canouil.fr"
+---
+
+A paragraph that needs one size on a slide and another on a page usually ends up written twice, once inside each `content-visible` block, and the two copies drift.
+
+`prism` keeps one copy.
+An attribute written `revealjs:style="…"` applies under `revealjs` and nowhere else; the prose beneath it is written once and read by every format.
+
+The name is the metaphor: one source, split into format-specific outputs.
+
+## Installation
+
+```bash
+quarto add {{< var extension.reference >}}
+```
+
+This will install the extension under the `_extensions` subdirectory.
+If you are using version control, you will want to check in this directory.
+
+Or install it from your editor with [Quarto Wizard](https://m.canouil.dev/quarto-wizard):
+
+::: {.btn-group role="group" aria-label="Quarto Wizard installer options"}
+
+[Visual Studio Code](vscode://mcanouil.quarto-wizard/install?repo={{< var extension.wizard-reference >}}){.btn .btn-outline-primary title="Install {{< var extension.reference >}} in Visual Studio Code using the Quarto Wizard extension."}
+[Positron](positron://mcanouil.quarto-wizard/install?repo={{< var extension.wizard-reference >}}){.btn .btn-outline-primary title="Install {{< var extension.reference >}} in Positron using the Quarto Wizard extension."}
+[VSCodium](vscodium://mcanouil.quarto-wizard/install?repo={{< var extension.wizard-reference >}}){.btn .btn-outline-primary title="Install {{< var extension.reference >}} in VSCodium using the Quarto Wizard extension."}
+
+:::
+
+## Quick start
+
+Enable the filter:
+
+```yaml
+filters:
+  - prism
+```
+
+Then prefix any attribute with a format name and a colon:
+
+```markdown
+::: {html:style="color: firebrick;" revealjs:style="color: deepskyblue;"}
+Firebrick on a page, deep sky blue on a slide.
+:::
+```
+
+Under `html` that resolves to `style="color: firebrick;"`, and the `revealjs:` attribute is dropped:
+
+::: {atelier-html:style="color: firebrick;" revealjs:style="color: deepskyblue;"}
+Firebrick on a page, deep sky blue on a slide.
+:::
+
+It works on divs, spans, headings, and code blocks.
+
+::: {.callout-important}
+The prefix is the name of the format Quarto is targeting, and a custom format is not its base writer.
+These pages are built by `atelier-html`, so the paragraph above is written `atelier-html:style` rather than `html:style`; written the other way it would resolve to nothing.
+See [the reference](reference.qmd#which-prefix-matches-which-format).
+:::
+
+## Seeing both sides
+
+This site is HTML, so every `html:` prefix on it resolves.
+The [Typst preview](preview.pdf) is the same site rendered to another format, where the `typst:` prefixes resolve instead and the `html:` ones are dropped.
+
+See the [Reference](reference.qmd) for the precedence rules, and the [Examples](examples.qmd) for each of them resolved.
+
+## Where it works
+
+Every output format.
+The filter rewrites attributes before any writer runs, so the mechanism is the same everywhere; only the values differ.
+
+## Links
+
+- [Reference](reference.qmd) for the prefixes and their precedence.
+- [Examples](examples.qmd) for attributes resolved for HTML.
+- [Typst preview](preview.pdf) for the same source resolved elsewhere.
+- [Changelog](changelog.qmd) for what each release changed.
+- [Source and issues](https://github.com/mcanouil/quarto-prism) on GitHub.

@@ -1,0 +1,104 @@
+---
+title: "Reference"
+subtitle: "Every prefix the prism extension recognises."
+description: "The complete prism behaviour: the attribute syntax, which prefix matches which format, the group alias, the default fallback, and the precedence between them."
+---
+
+## Enabling the filter
+
+```yaml
+filters:
+  - prism
+```
+
+## Syntax
+
+An attribute key is `format:name`, and its value is used as `name` when `format` matches.
+
+| Pattern | Behaviour |
+| --- | --- |
+| `format:name="…"` | Becomes `name="…"` when `format` matches the active format; dropped otherwise. |
+| `slide:name="…"` | Becomes `name="…"` under `revealjs`, `slidy`, `s5`, `dzslides`, and `slideous`. |
+| `default:name="…"` | Used only when no format-specific variant of `name` matched. |
+| `name="…"` | Passed through unchanged, unless a higher-ranked entry sets the same name. |
+| `.class` | Untouched. |
+| `#identifier` | Untouched. |
+
+: The attribute forms. {.striped .hover tbl-colwidths="[28,72]"}
+
+It applies to divs, spans, headings, and code blocks.
+
+## Which prefix matches which format
+
+The prefix is matched exactly against the format Quarto is targeting, resolved through [`quarto.format.format_identifier()`](https://quarto.org/docs/extensions/lua-api.html#quarto-format-format_identifier).
+
+| Active format | Matching prefix |
+| --- | --- |
+| `html` | `html:` |
+| `revealjs` | `revealjs:` |
+| `typst` | `typst:` |
+| `latex`, used for PDF | `latex:` |
+| `beamer` | `beamer:` |
+| `docx` | `docx:` |
+| `pptx` | `pptx:` |
+| A custom format, say `mcanouil-typst` | `mcanouil-typst:` |
+
+: Format names and their prefixes. {.striped .hover tbl-colwidths="[45,55]"}
+
+::: {.callout-important}
+A custom format is distinct from the writer beneath it.
+Under `mcanouil-typst` only `mcanouil-typst:` matches, not `typst:`, and the other way round.
+
+There is no `pdf:` prefix either: PDF is produced through Pandoc's `latex` writer, so it is `latex:`.
+:::
+
+## Precedence
+
+For one attribute name on one element:
+
+| Rank | Source | Example |
+| --- | --- | --- |
+| 1 | An exact format match. | `html:style` under `html`. |
+| 2 | A group alias. | `slide:style` under `revealjs`. |
+| 3 | The `default:` fallback. | `default:style`. |
+| 4 | An unprefixed attribute. | `style`. |
+
+: How a value is chosen. {.striped .hover tbl-colwidths="[10,44,46]"}
+
+Two entries of the same rank for the same name, two `html:style` keys for instance, resolve to the last one written.
+
+An unprefixed attribute is dropped when anything higher-ranked resolves to the same name, so an element never carries the same attribute twice and Pandoc never warns about it.
+
+Promoted attributes are written after the unprefixed ones that survive, in the order their target names first appeared.
+
+## Options
+
+```yaml
+extensions:
+  prism:
+    warn-on-drop: true
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `warn-on-drop` | boolean | `false` | Warn each time a format-scoped attribute is dropped because nothing matched. |
+
+: Document and project options. {.striped .hover tbl-colwidths="[18,12,12,58]"}
+
+::: {.callout-caution}
+A prefix is known when it is an exact format name, a group alias, or `default`.
+Anything else is treated as a format that is simply not active, and the attribute is dropped in silence.
+
+That is deliberate, since a format of that name would resolve it later, but it also hides a typo such as `revaeljs:style`.
+`warn-on-drop` is how you find those:
+
+```text
+(W) [prism] Dropped attribute(s) 'revaeljs:style' on #mybox because no prefix matched target format 'revealjs'.
+```
+:::
+
+## Limitations
+
+- The prefix must match the format name exactly; there is no partial or base-writer matching.
+- `slide` is the only group alias.
+- An unknown prefix is indistinguishable from an inactive format, which is why `warn-on-drop` exists.
