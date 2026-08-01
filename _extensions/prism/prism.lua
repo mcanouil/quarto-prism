@@ -140,6 +140,13 @@ local function is_pandoc_typst_key(name)
   return TYPST_BLOCK_PARAMETERS[name] == true
 end
 
+--- Reserved `typst:` keys the document has taken back for prism.
+--- Set per document via `extensions.prism.claim-typst: [width]`, which promotes
+--- those keys as any other prefixed attribute instead of leaving them to
+--- Pandoc's Typst writer.
+--- @type table<string, boolean>
+local claimed_typst_keys = {}
+
 --- Whether to emit a warning when a format-scoped attribute is dropped.
 --- Set per document via `extensions.prism.warn-on-drop: true`.
 --- @type boolean
@@ -194,11 +201,13 @@ local function process(el)
   for _, kv in ipairs(el.attributes) do
     local key, value = kv[1], kv[2]
     local prefix, name = key:match("^([^:]+):(.+)$")
-    if WRITES_TYPST and prefix == PANDOC_TYPST_PREFIX and name and is_pandoc_typst_key(name) then
+    if WRITES_TYPST and prefix == PANDOC_TYPST_PREFIX and name
+        and is_pandoc_typst_key(name) and not claimed_typst_keys[name] then
       -- Pandoc's Typst writer reads this key itself, so it keeps its prefix and
       -- passes through untouched. Promoting it would leave a name neither the
       -- writer nor Quarto's CSS filter consumes, and the styling would vanish.
-      -- Outside a Typst render the key falls through and is dropped as usual.
+      -- `claim-typst` takes a key back for promotion; outside a Typst render the
+      -- key falls through and is dropped as usual.
       table.insert(kept, { key, value })
     elseif prefix and name then
       if prefix == DEFAULT_PREFIX then
@@ -259,7 +268,29 @@ local function process(el)
   return el
 end
 
---- Read the `extensions.prism.warn-on-drop` option from document metadata.
+--- Record a `claim-typst` entry, warning when it names a key prism already owns.
+--- A key outside the reserved set is promoted with or without the option, so
+--- naming it changes nothing and points at a typo or a stale configuration.
+--- @param value any A single metadata value from the `claim-typst` option.
+--- @return nil
+local function claim_typst_key(value)
+  local name = pandoc.utils.stringify(value)
+  if name == '' then
+    return nil
+  end
+  if not is_pandoc_typst_key(name) then
+    log.log_warning(
+      EXTENSION_NAME,
+      'claim-typst names "' .. name .. '", which is not a key Pandoc reads, ' ..
+      'so it is promoted either way and the entry has no effect.'
+    )
+    return nil
+  end
+  claimed_typst_keys[name] = true
+  return nil
+end
+
+--- Read the `extensions.prism` options from document metadata.
 --- @param meta table The document metadata table.
 --- @return nil
 local function read_options(meta)
@@ -267,6 +298,18 @@ local function read_options(meta)
   if not config then return nil end
   if config['warn-on-drop'] ~= nil then
     warn_on_drop = pandoc.utils.stringify(config['warn-on-drop']) == 'true'
+  end
+  -- A metadata scalar and a metadata list are both Lua tables, so the list has
+  -- to be recognised through `pandoc.utils.type` rather than through `type`.
+  local claim = config['claim-typst']
+  if claim ~= nil then
+    if pandoc.utils.type(claim) == 'List' then
+      for _, entry in ipairs(claim) do
+        claim_typst_key(entry)
+      end
+    else
+      claim_typst_key(claim)
+    end
   end
   return nil
 end

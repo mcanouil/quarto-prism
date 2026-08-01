@@ -103,8 +103,32 @@ extensions:
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `warn-on-drop` | boolean | `false` | Warn each time a format-scoped attribute is dropped because nothing matched. |
+| `claim-typst` | array | empty | Names of reserved `typst:` keys to promote rather than leave to Pandoc's writer. |
 
 : Document and project options. {.striped .hover tbl-colwidths="[18,12,12,58]"}
+
+`claim-typst` takes back individual keys from the reserved set:
+
+```yaml
+extensions:
+  prism:
+    claim-typst: [width]
+```
+
+```markdown
+::: {typst:width="50%" typst:fill="rgb(240,240,240)"}
+`width` is promoted; `fill` still reaches `#block(fill: …)`.
+:::
+```
+
+Naming a key prism already promotes changes nothing and is warned about, so a typo does not pass unnoticed.
+
+::: {.callout-important}
+Promoting a key is not the same as it having an effect.
+Pandoc's Typst writer reads its own `typst:` attributes and drops plain ones, so a promoted `width="50%"` on a div reaches no consumer and the width is simply lost.
+The option is for a pipeline where something else reads the plain attribute, a later filter or another extension.
+Where you want the width itself, leave the key reserved and let Pandoc set `#block(width: …)`.
+:::
 
 ::: {.callout-caution}
 A prefix is known when it is an exact format name, a group alias, or `default`.
@@ -123,4 +147,4 @@ That is deliberate, since a format of that name would resolve it later, but it a
 - The prefix must match the format name exactly; there is no partial or base-writer matching. The one exception is the reserved `typst:` set above, which is recognised whenever Pandoc writes Typst, including under a custom format such as `mcanouil-typst`.
 - `slide` is the only group alias.
 - An unknown prefix is indistinguishable from an inactive format, which is why `warn-on-drop` exists.
-- A `typst:` key naming a `block()` parameter belongs to Pandoc, so `typst:width` cannot be used to promote a `width` attribute in a Typst render.
+- A `typst:` key naming a `block()` parameter belongs to Pandoc, so `typst:width` sets a block width rather than promoting a `width` attribute. `claim-typst` reverses that for named keys, document-wide; there is no per-element form.
