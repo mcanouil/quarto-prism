@@ -37,7 +37,8 @@ The prefix is matched exactly against the format Quarto is targeting, resolved t
 | `html` | `html:` |
 | `revealjs` | `revealjs:` |
 | `typst` | `typst:` |
-| `latex`, used for PDF | `latex:` |
+| `pdf` | `pdf:` |
+| `latex`, when the target is `.tex` rather than PDF | `latex:` |
 | `beamer` | `beamer:` |
 | `docx` | `docx:` |
 | `pptx` | `pptx:` |
@@ -49,7 +50,22 @@ The prefix is matched exactly against the format Quarto is targeting, resolved t
 A custom format is distinct from the writer beneath it.
 Under `mcanouil-typst` only `mcanouil-typst:` matches, not `typst:`, and the other way round.
 
-There is no `pdf:` prefix either: PDF is produced through Pandoc's `latex` writer, so it is `latex:`.
+The same holds for `pdf` and `latex`, which are two Quarto formats over one writer: `format: pdf` matches `pdf:` alone, and `latex:` matches only when the target is `latex`, the format that stops at `.tex`.
+:::
+
+::: {.callout-caution}
+Quarto reads `typst:`-prefixed attributes of its own for Typst output, `typst:fill` and `typst:text:fill` among them.
+The `format:name` namespace is the same one, so under Typst `prism` rewrites `typst:text:fill="rgb(0,0,255)"` to `text:fill="rgb(0,0,255)"`, which the Typst writer ignores.
+
+Write the property as CSS instead, and Quarto translates it:
+
+```markdown
+::: {typst:style="color: rgb(0,0,255);"}
+Blue in Typst output alone.
+:::
+```
+
+`color`, `background-color`, `font-family`, `font-size`, `font-weight`, and `font-style` are the properties Quarto carries across to Typst.
 :::
 
 ## Precedence
@@ -87,7 +103,7 @@ extensions:
 
 ::: {.callout-caution}
 A prefix is known when it is an exact format name, a group alias, or `default`.
-Anything else is treated as a format that is simply not active, and the attribute is dropped in silence.
+Anything else is treated as a format that is not active, and the attribute is dropped in silence.
 
 That is deliberate, since a format of that name would resolve it later, but it also hides a typo such as `revaeljs:style`.
 `warn-on-drop` is how you find those:

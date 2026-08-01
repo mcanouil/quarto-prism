@@ -11,15 +11,17 @@ format:
 
 This page is part of the documentation site and is rendered to Typst, so every prefix on it resolves against that format rather than against HTML.
 
-::: {atelier-html:text-fill="rgb(178,34,34)" typst:text-fill="rgb(0,0,255)"}
-This paragraph asks for one colour under the site format and blue under Typst. In this PDF it is blue.
+::: {atelier-html:style="color: rgb(178,34,34);" typst:style="color: rgb(0,0,255);"}
+This paragraph asks for one colour under the site format and blue under Typst.
+In this PDF it is blue.
 :::
 
-::: {default:text-fill="rgb(100,100,100)" atelier-html:text-fill="rgb(178,34,34)"}
-This one names no Typst value, so the default applies and it is grey. On the HTML pages the exact match wins instead.
+::: {default:style="color: rgb(100,100,100);" atelier-html:style="color: rgb(178,34,34);"}
+This one names no Typst value, so the default applies and it is grey.
+On the HTML pages the exact match wins instead.
 :::
 
-::: {slide:text-fill="rgb(0,128,128)"}
+::: {slide:style="color: rgb(0,128,128);"}
 This one targets the slide formats only, so nothing applies here and the text is ordinary.
 :::
 

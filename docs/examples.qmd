@@ -21,7 +21,7 @@ extensions:
 These pages are rendered by the `atelier-html` format, a Quarto custom format built on the HTML writer.
 The prefix is matched against the format Quarto is targeting, which is the custom format's own name, so `html:` matches nothing here and `atelier-html:` matches everything.
 
-That is the same rule the [Reference](reference.qmd#which-prefix-matches-which-format) states for `mcanouil-typst` against `typst`, and it is easy to trip over: the attribute simply vanishes.
+That is the same rule the [Reference](reference.qmd#which-prefix-matches-which-format) states for `mcanouil-typst` against `typst`, and the attribute vanishes without a word when you get it wrong.
 Turning `warn-on-drop` on was how this page found out.
 :::
 
@@ -31,12 +31,12 @@ That is the option working, not a fault.
 ## An exact match
 
 ```markdown
-::: {atelier-html:style="color: firebrick;" typst:text-fill="rgb(0,0,255)"}
+::: {atelier-html:style="color: firebrick;" typst:style="color: rgb(0,0,255);"}
 Firebrick here, blue in the PDF.
 :::
 ```
 
-::: {atelier-html:style="color: firebrick;" typst:text-fill="rgb(0,0,255)"}
+::: {atelier-html:style="color: firebrick;" typst:style="color: rgb(0,0,255);"}
 Firebrick here, blue in the PDF.
 :::
 
