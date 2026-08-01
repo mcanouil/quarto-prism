@@ -90,11 +90,22 @@ end
 local TARGET_FORMAT = resolve_target_format()
 
 --- Whether Pandoc writes this render with its Typst writer.
---- Taken from the Pandoc `FORMAT` global rather than the Quarto target format,
---- because a custom format such as `mcanouil-typst` is written by the same
---- writer and reads the same `typst:` attributes.
---- @type boolean
-local WRITES_TYPST = FORMAT:match('typst') ~= nil
+--- Asks Quarto rather than the target format, because a custom format such as
+--- `mcanouil-typst` is written by the same writer and reads the same `typst:`
+--- attributes: its `target-format` is `mcanouil-typst` while `FORMAT`, which is
+--- what `is_typst_output` tests, is `typst`.
+--- @return boolean
+local function resolve_writes_typst()
+  local ok, result = pcall(function()
+    return quarto.format.is_typst_output()
+  end)
+  if ok then
+    return result == true
+  end
+  return FORMAT == 'typst'
+end
+
+local WRITES_TYPST = resolve_writes_typst()
 
 --- The `default` prefix names a fallback value, applied only when no
 --- format-specific variant of the same attribute name matched.
@@ -131,13 +142,21 @@ local TYPST_BLOCK_PARAMETERS = {
 --- @type string
 local PANDOC_TYPST_PREFIX = 'typst'
 
+--- Whether a `typst:` key names a set-text property, the `typst:text:<property>`
+--- form Pandoc's Typst writer reads on both a div and a span.
+--- @param name string The attribute key with the `typst:` prefix removed.
+--- @return boolean
+local function is_typst_text_property(name)
+  return name:match('^text:') ~= nil
+end
+
 --- Whether a `typst:` key is one Pandoc's Typst writer reads on some element.
 --- Used to tell a `claim-typst` entry that names a real reserved key from one
 --- that names a key prism promotes anyway.
 --- @param name string The attribute key with the `typst:` prefix removed.
 --- @return boolean
 local function is_reserved_typst_name(name)
-  return name:match('^text:') ~= nil or TYPST_BLOCK_PARAMETERS[name] == true
+  return is_typst_text_property(name) or TYPST_BLOCK_PARAMETERS[name] == true
 end
 
 --- Whether Pandoc's Typst writer consumes this attribute on this element.
@@ -156,7 +175,7 @@ local function is_pandoc_typst_key(name, element_type)
   if element_type == 'Div' then
     return is_reserved_typst_name(name)
   end
-  return element_type == 'Span' and name:match('^text:') ~= nil
+  return element_type == 'Span' and is_typst_text_property(name)
 end
 
 --- Reserved `typst:` keys the document has taken back for prism.
