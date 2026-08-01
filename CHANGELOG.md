@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 
+- fix: Raise `quarto-required` to `>=1.9.38`. The extension manifest registers the filter at `pre-ast`, and the `_extension.yml` schema only accepts a filter entry point from that version; below it the render fails validation.
 - fix: Leave the `typst:` attributes Pandoc reads itself untouched in a Typst render, rather than stripping their prefix and losing the styling. On a div those are `typst:text:<property>` and the thirteen parameters of Typst's `block()`: `width`, `height`, `breakable`, `fill`, `stroke`, `radius`, `inset`, `outset`, `spacing`, `above`, `below`, `clip`, and `sticky`. On a span only `typst:text:<property>` is read, and on a code block or a heading nothing is, so prism keeps those. The reserved keys now work alongside a promoted `typst:style` on the same element, and the split follows [Typst property output](https://pandoc.org/typst-property-output.html). Applies whenever Pandoc writes Typst, including under a custom format.
 
 ### Documentation
