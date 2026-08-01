@@ -80,6 +80,13 @@ end
 
 local TARGET_FORMAT = resolve_target_format()
 
+--- Whether Pandoc writes this render with its Typst writer.
+--- Taken from the Pandoc `FORMAT` global rather than the Quarto target format,
+--- because a custom format such as `mcanouil-typst` is written by the same
+--- writer and reads the same `typst:` attributes.
+--- @type boolean
+local WRITES_TYPST = FORMAT:match('typst') ~= nil
+
 --- The `default` prefix names a fallback value, applied only when no
 --- format-specific variant of the same attribute name matched.
 local DEFAULT_PREFIX = "default"
@@ -92,6 +99,63 @@ local DEFAULT_PREFIX = "default"
 local FORMAT_ALIASES = {
   slide = slide_formats.formats,
 }
+
+--- The parameters Typst's `block()` function accepts.
+--- @type table<string, boolean>
+local TYPST_BLOCK_PARAMETERS = {
+  width = true,
+  height = true,
+  breakable = true,
+  fill = true,
+  stroke = true,
+  radius = true,
+  inset = true,
+  outset = true,
+  spacing = true,
+  above = true,
+  below = true,
+  clip = true,
+  sticky = true,
+}
+
+--- The one prefix that names a namespace Pandoc's own writer consumes.
+--- @type string
+local PANDOC_TYPST_PREFIX = 'typst'
+
+--- Whether a `typst:` key is one Pandoc's Typst writer reads on some element.
+--- Used to tell a `claim-typst` entry that names a real reserved key from one
+--- that names a key prism promotes anyway.
+--- @param name string The attribute key with the `typst:` prefix removed.
+--- @return boolean
+local function is_reserved_typst_name(name)
+  return name:match('^text:') ~= nil or TYPST_BLOCK_PARAMETERS[name] == true
+end
+
+--- Whether Pandoc's Typst writer consumes this attribute on this element.
+--- Per <https://pandoc.org/typst-property-output.html> the writer reads
+--- `typst:text:<property>` as a set-text rule on a div and on a span, and
+--- `typst:<parameter>` as an argument to `#block()` on a div alone. No other
+--- nested function is recognised: `typst:par:leading` is dropped by the writer,
+--- and code blocks and headings are not covered at all, so prism keeps those.
+--- Promoting one of these would strip a prefix the writer is waiting for, and
+--- the styling would be lost; a key outside the set fails the render natively
+--- with `unexpected argument`, so prism claims it.
+--- @param name string The attribute key with the `typst:` prefix removed.
+--- @param element_type string The Pandoc element tag, e.g. "Div" or "Span".
+--- @return boolean True when Pandoc consumes the attribute itself.
+local function is_pandoc_typst_key(name, element_type)
+  if element_type == 'Div' then
+    return is_reserved_typst_name(name)
+  end
+  return element_type == 'Span' and name:match('^text:') ~= nil
+end
+
+--- Reserved `typst:` keys the document has taken back for prism.
+--- Set per document via `extensions.prism.claim-typst: [width]`, which promotes
+--- those keys as any other prefixed attribute instead of leaving them to
+--- Pandoc's Typst writer.
+--- @type table<string, boolean>
+local claimed_typst_keys = {}
 
 --- Whether to emit a warning when a format-scoped attribute is dropped.
 --- Set per document via `extensions.prism.warn-on-drop: true`.
@@ -147,14 +211,24 @@ local function process(el)
   for _, kv in ipairs(el.attributes) do
     local key, value = kv[1], kv[2]
     local prefix, name = key:match("^([^:]+):(.+)$")
-    if prefix and name then
+    local typst_namespace = WRITES_TYPST and prefix == PANDOC_TYPST_PREFIX
+    -- A claimed key is claimed for the writer, so it promotes under a custom
+    -- format over that writer as it does under `typst` itself.
+    local claimed = typst_namespace and claimed_typst_keys[name]
+    if typst_namespace and not claimed and is_pandoc_typst_key(name, el.t) then
+      -- Pandoc's Typst writer reads this key itself, so it keeps its prefix and
+      -- passes through untouched. Promoting it would leave a name neither the
+      -- writer nor Quarto's CSS filter consumes, and the styling would vanish.
+      -- Outside a Typst render the key falls through and is dropped as usual.
+      table.insert(kept, { key, value })
+    elseif prefix and name then
       if prefix == DEFAULT_PREFIX then
         if default_value[name] == nil then
           table.insert(default_order, name)
         end
         default_value[name] = value
       else
-        local kind = match_prefix(prefix)
+        local kind = claimed and "exact" or match_prefix(prefix)
         -- An exact match always wins over an alias match for the same name.
         if kind == "exact" or (kind == "alias" and promoted_kind[name] ~= "exact") then
           if promoted_value[name] == nil then
@@ -206,7 +280,29 @@ local function process(el)
   return el
 end
 
---- Read the `extensions.prism.warn-on-drop` option from document metadata.
+--- Record a `claim-typst` entry, warning when it names a key prism already owns.
+--- A key outside the reserved set is promoted with or without the option, so
+--- naming it changes nothing and points at a typo or a stale configuration.
+--- @param value any A single metadata value from the `claim-typst` option.
+--- @return nil
+local function claim_typst_key(value)
+  local name = pandoc.utils.stringify(value)
+  if name == '' then
+    return nil
+  end
+  if not is_reserved_typst_name(name) then
+    log.log_warning(
+      EXTENSION_NAME,
+      'claim-typst names "' .. name .. '", which is not a key Pandoc reads, ' ..
+      'so it is promoted either way and the entry has no effect.'
+    )
+    return nil
+  end
+  claimed_typst_keys[name] = true
+  return nil
+end
+
+--- Read the `extensions.prism` options from document metadata.
 --- @param meta table The document metadata table.
 --- @return nil
 local function read_options(meta)
@@ -214,6 +310,17 @@ local function read_options(meta)
   if not config then return nil end
   if config['warn-on-drop'] ~= nil then
     warn_on_drop = pandoc.utils.stringify(config['warn-on-drop']) == 'true'
+  end
+  -- A metadata scalar and a metadata list are both Lua tables, so the list has
+  -- to be recognised through `pandoc.utils.type` rather than through `type`.
+  local claim = config['claim-typst']
+  if claim ~= nil then
+    if pandoc.utils.type(claim) ~= 'List' then
+      claim = { claim }
+    end
+    for _, entry in ipairs(claim) do
+      claim_typst_key(entry)
+    end
   end
   return nil
 end
