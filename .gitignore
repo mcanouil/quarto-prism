@@ -13,3 +13,5 @@ docs/api/*.qmd
 .quarto/
 
 /.luarc.json
+/.quarto/
+**/*.quarto_ipynb

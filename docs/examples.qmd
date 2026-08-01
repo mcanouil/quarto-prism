@@ -1,0 +1,127 @@
+---
+title: "Examples"
+subtitle: "Attributes resolved for HTML."
+description: "Each prism prefix applied to a real element, resolved for this HTML page, with the same source resolved for Typst alongside."
+---
+
+Every element below carries the attributes shown above it, and the filter resolves them for HTML as this page is rendered.
+The [Typst preview](preview.pdf) is the same mechanism resolving the other way.
+
+This site turns on `warn-on-drop`, so a mistyped prefix on these pages is reported rather than lost:
+
+```yaml
+extensions:
+  prism:
+    warn-on-drop: true
+```
+
+::: {.callout-important}
+## The prefix here is `atelier-html:`, not `html:`
+
+These pages are rendered by the `atelier-html` format, a Quarto custom format built on the HTML writer.
+The prefix is matched against the format Quarto is targeting, which is the custom format's own name, so `html:` matches nothing here and `atelier-html:` matches everything.
+
+That is the same rule the [Reference](reference.qmd#which-prefix-matches-which-format) states for `mcanouil-typst` against `typst`, and the attribute vanishes without a word when you get it wrong.
+Turning `warn-on-drop` on was how this page found out.
+:::
+
+Because these pages deliberately carry prefixes for formats they are not built as, the render reports a handful of drops every time.
+That is the option working, not a fault.
+
+## An exact match
+
+```markdown
+::: {atelier-html:style="color: firebrick;" typst:style="color: rgb(0,0,255);"}
+Firebrick here, blue in the PDF.
+:::
+```
+
+::: {atelier-html:style="color: firebrick;" typst:style="color: rgb(0,0,255);"}
+Firebrick here, blue in the PDF.
+:::
+
+The `typst:` attribute is dropped from this page, and the `html:` one from the PDF.
+
+## The default fallback
+
+`default:` applies only when no format-specific variant of the same name matched.
+
+```markdown
+::: {default:style="color: grey;" atelier-html:style="color: rebeccapurple;"}
+Rebecca purple here, grey everywhere else.
+:::
+```
+
+::: {default:style="color: grey;" atelier-html:style="color: rebeccapurple;"}
+Rebecca purple here, grey everywhere else.
+:::
+
+In the [preview](preview.pdf) the same construction resolves to the default, since it names no Typst value.
+
+## The slide alias
+
+`slide:` covers `revealjs`, `slidy`, `s5`, `dzslides`, and `slideous` at once.
+
+```markdown
+::: {slide:style="font-size: 2em;"}
+Larger on every HTML slide format, ordinary here.
+:::
+```
+
+::: {slide:style="font-size: 2em;"}
+Larger on every HTML slide format, ordinary here.
+:::
+
+Nothing applies on this page, because HTML is not a slide format.
+An exact prefix beats the alias, so `slide:` and `revealjs:` on one element resolve to the second under `revealjs` and to the first under `slidy`.
+
+## Precedence in one element
+
+```markdown
+::: {style="color: grey;" default:style="color: silver;" atelier-html:style="color: crimson;"}
+Crimson here.
+:::
+```
+
+::: {style="color: grey;" default:style="color: silver;" atelier-html:style="color: crimson;"}
+Crimson here.
+:::
+
+The exact match wins, the default is not needed, and the unprefixed `style` is dropped rather than left to collide, so the element carries one `style` attribute.
+
+## On other elements
+
+It is not only divs.
+
+```markdown
+[An inline span]{atelier-html:style="background: gold;"}
+
+## A heading {atelier-html:style="color: teal;"}
+```
+
+[An inline span]{atelier-html:style="background: gold;"} sits in this sentence.
+
+### A heading resolved for HTML {atelier-html:style="color: teal;"}
+
+A code block takes them too, which is how a listing is shrunk on a slide without touching the code:
+
+````markdown
+```{.r revealjs:style="font-size: 0.6em;"}
+1 + 1
+```
+````
+
+## Catching a typo
+
+An unknown prefix is treated as a format that is not active, and the attribute vanishes.
+With `warn-on-drop` on, the render says so instead:
+
+```text
+(W) [prism] Dropped attribute(s) 'revaeljs:style' on #mybox because no prefix matched target format 'revealjs'.
+```
+
+That is the only way to tell a typo from a deliberately inactive format.
+
+## Source
+
+The repository ships a short, standalone starting point you can copy: [`example.qmd`](https://github.com/mcanouil/quarto-prism/blob/main/example.qmd).
