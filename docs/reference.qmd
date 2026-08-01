@@ -53,19 +53,24 @@ Under `mcanouil-typst` only `mcanouil-typst:` matches, not `typst:`, and the oth
 The same holds for `pdf` and `latex`, which are two Quarto formats over one writer: `format: pdf` matches `pdf:` alone, and `latex:` matches only when the target is `latex`, the format that stops at `.tex`.
 :::
 
-::: {.callout-caution}
-Quarto reads `typst:`-prefixed attributes of its own for Typst output, `typst:fill` and `typst:text:fill` among them.
-The `format:name` namespace is the same one, so under Typst `prism` rewrites `typst:text:fill="rgb(0,0,255)"` to `text:fill="rgb(0,0,255)"`, which the Typst writer ignores.
+::: {.callout-note}
+Pandoc's Typst writer reads `typst:`-prefixed attributes of its own, and prism leaves those alone in a Typst render rather than promoting them.
 
-Write the property as CSS instead, and Quarto translates it:
+`typst:text:<property>` becomes `#set text(<property>: …)`, and `typst:<parameter>` becomes an argument to `#block()` for the thirteen parameters Typst's `block()` accepts: `width`, `height`, `breakable`, `fill`, `stroke`, `radius`, `inset`, `outset`, `spacing`, `above`, `below`, `clip`, and `sticky`.
+Both reach the writer untouched, so the two namespaces coexist on one element.
+
+Any other `typst:` key is prism's, because the writer splices it into `#block()` unvalidated and Typst then rejects it: `typst:style` on its own fails the render with `unexpected argument: style`.
+Prefixing it hands it to prism, which strips the prefix so that Quarto's own CSS translation picks it up:
 
 ```markdown
-::: {typst:style="color: rgb(0,0,255);"}
-Blue in Typst output alone.
+::: {typst:style="color: rgb(0,0,255);" typst:text:size="20pt"}
+Blue and large in Typst output alone.
 :::
 ```
 
 `color`, `background-color`, `font-family`, `font-size`, `font-weight`, and `font-style` are the properties Quarto carries across to Typst.
+
+Outside a Typst render a `typst:` key is dropped as any other non-matching prefix is.
 :::
 
 ## Precedence
@@ -115,6 +120,7 @@ That is deliberate, since a format of that name would resolve it later, but it a
 
 ## Limitations
 
-- The prefix must match the format name exactly; there is no partial or base-writer matching.
+- The prefix must match the format name exactly; there is no partial or base-writer matching. The one exception is the reserved `typst:` set above, which is recognised whenever Pandoc writes Typst, including under a custom format such as `mcanouil-typst`.
 - `slide` is the only group alias.
 - An unknown prefix is indistinguishable from an inactive format, which is why `warn-on-drop` exists.
+- A `typst:` key naming a `block()` parameter belongs to Pandoc, so `typst:width` cannot be used to promote a `width` attribute in a Typst render.

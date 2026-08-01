@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+- fix: Leave the `typst:` attributes Pandoc reads itself untouched in a Typst render, rather than stripping their prefix and losing the styling. `typst:text:<property>` and the thirteen `block()` parameters (`width`, `height`, `breakable`, `fill`, `stroke`, `radius`, `inset`, `outset`, `spacing`, `above`, `below`, `clip`, `sticky`) now reach the writer, so they work alongside a promoted `typst:style` on the same element. Any other `typst:` key stays prism's, since the writer rejects it. Recognised whenever Pandoc writes Typst, including under a custom format.
+
 ### Documentation
 
 - docs: Add a documentation website under `docs/`, built on the `atelier` project type and published to <https://m.canouil.dev/quarto-prism/>, with a Typst rendering of the same source so both branches of a prefix can be compared.

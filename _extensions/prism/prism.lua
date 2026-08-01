@@ -80,6 +80,13 @@ end
 
 local TARGET_FORMAT = resolve_target_format()
 
+--- Whether Pandoc writes this render with its Typst writer.
+--- Taken from the Pandoc `FORMAT` global rather than the Quarto target format,
+--- because a custom format such as `mcanouil-typst` is written by the same
+--- writer and reads the same `typst:` attributes.
+--- @type boolean
+local WRITES_TYPST = FORMAT:match('typst') ~= nil
+
 --- The `default` prefix names a fallback value, applied only when no
 --- format-specific variant of the same attribute name matched.
 local DEFAULT_PREFIX = "default"
@@ -92,6 +99,46 @@ local DEFAULT_PREFIX = "default"
 local FORMAT_ALIASES = {
   slide = slide_formats.formats,
 }
+
+--- Parameters of Typst's `block()` function, which Pandoc's Typst writer
+--- splices from a `typst:<key>` attribute straight into `#block(<key>: value)`.
+--- Those keys belong to Pandoc, so promoting them would strip a prefix the
+--- writer is waiting for and the styling would be lost.
+--- A `typst:` key outside this set is not a `block()` parameter, so natively it
+--- produces `unexpected argument` and fails the render; prism claims it.
+--- @type table<string, boolean>
+local TYPST_BLOCK_PARAMETERS = {
+  width = true,
+  height = true,
+  breakable = true,
+  fill = true,
+  stroke = true,
+  radius = true,
+  inset = true,
+  outset = true,
+  spacing = true,
+  above = true,
+  below = true,
+  clip = true,
+  sticky = true,
+}
+
+--- The one prefix that names a namespace Pandoc's own writer consumes.
+--- @type string
+local PANDOC_TYPST_PREFIX = 'typst'
+
+--- Whether a `typst:` attribute is one Pandoc's Typst writer consumes.
+--- `typst:text:<property>` becomes `#set text(<property>: value)`, and
+--- `typst:<parameter>` becomes an argument to `#block()`. No other nested
+--- function is recognised: `typst:par:leading` is dropped by the writer.
+--- @param name string The attribute key with the `typst:` prefix removed.
+--- @return boolean True when Pandoc consumes the attribute itself.
+local function is_pandoc_typst_key(name)
+  if name:match('^text:') then
+    return true
+  end
+  return TYPST_BLOCK_PARAMETERS[name] == true
+end
 
 --- Whether to emit a warning when a format-scoped attribute is dropped.
 --- Set per document via `extensions.prism.warn-on-drop: true`.
@@ -147,7 +194,13 @@ local function process(el)
   for _, kv in ipairs(el.attributes) do
     local key, value = kv[1], kv[2]
     local prefix, name = key:match("^([^:]+):(.+)$")
-    if prefix and name then
+    if WRITES_TYPST and prefix == PANDOC_TYPST_PREFIX and name and is_pandoc_typst_key(name) then
+      -- Pandoc's Typst writer reads this key itself, so it keeps its prefix and
+      -- passes through untouched. Promoting it would leave a name neither the
+      -- writer nor Quarto's CSS filter consumes, and the styling would vanish.
+      -- Outside a Typst render the key falls through and is dropped as usual.
+      table.insert(kept, { key, value })
+    elseif prefix and name then
       if prefix == DEFAULT_PREFIX then
         if default_value[name] == nil then
           table.insert(default_order, name)
