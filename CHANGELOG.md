@@ -2,10 +2,6 @@
 
 ## Unreleased
 
-### New Features
-
-- feat: Add `extensions.prism.claim-typst`, a list of reserved `typst:` keys to promote rather than leave to Pandoc's Typst writer, so a document that wants `typst:width` handled by prism can say so. Naming a key prism already promotes has no effect and is warned about. Promoting a key is not the same as it having an effect: Pandoc's writer drops plain attributes, so this is for a pipeline where something else reads them.
-
 ### Bug Fixes
 
 - fix: Leave the `typst:` attributes Pandoc reads itself untouched in a Typst render, rather than stripping their prefix and losing the styling. On a div those are `typst:text:<property>` and the thirteen parameters of Typst's `block()`: `width`, `height`, `breakable`, `fill`, `stroke`, `radius`, `inset`, `outset`, `spacing`, `above`, `below`, `clip`, and `sticky`. On a span only `typst:text:<property>` is read, and on a code block or a heading nothing is, so prism keeps those. The reserved keys now work alongside a promoted `typst:style` on the same element, and the split follows [Typst property output](https://pandoc.org/typst-property-output.html). Applies whenever Pandoc writes Typst, including under a custom format.
