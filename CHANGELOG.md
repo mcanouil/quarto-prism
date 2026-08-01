@@ -8,7 +8,7 @@
 
 ### Bug Fixes
 
-- fix: Leave the `typst:` attributes Pandoc reads itself untouched in a Typst render, rather than stripping their prefix and losing the styling. `typst:text:<property>` and the thirteen `block()` parameters (`width`, `height`, `breakable`, `fill`, `stroke`, `radius`, `inset`, `outset`, `spacing`, `above`, `below`, `clip`, `sticky`) now reach the writer, so they work alongside a promoted `typst:style` on the same element. Any other `typst:` key stays prism's, since the writer rejects it. Recognised whenever Pandoc writes Typst, including under a custom format.
+- fix: Leave the `typst:` attributes Pandoc reads itself untouched in a Typst render, rather than stripping their prefix and losing the styling. On a div those are `typst:text:<property>` and the thirteen parameters of Typst's `block()`: `width`, `height`, `breakable`, `fill`, `stroke`, `radius`, `inset`, `outset`, `spacing`, `above`, `below`, `clip`, and `sticky`. On a span only `typst:text:<property>` is read, and on a code block or a heading nothing is, so prism keeps those. The reserved keys now work alongside a promoted `typst:style` on the same element, and the split follows [Typst property output](https://pandoc.org/typst-property-output.html). Applies whenever Pandoc writes Typst, including under a custom format.
 
 ### Documentation
 

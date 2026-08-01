@@ -15,6 +15,7 @@ options:
     description: Emit a Quarto warning each time a format-scoped attribute is dropped because no prefix matched the active target format; useful to surface typos in prefixes that would otherwise vanish silently.
   claim-typst:
     type: array
+    default: []
     title: Reserved typst keys to promote instead
     description: "Names of `typst:` keys that prism should promote rather than leave to Pandoc's Typst writer, for example `width` to make `typst:width` set a width attribute. Only the keys Pandoc reads are reserved: `typst:text:<property>` and the parameters of Typst's `block()`. Naming any other key has no effect and is warned about."
     items:
