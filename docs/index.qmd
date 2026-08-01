@@ -70,6 +70,8 @@ See [the reference](reference.qmd#which-prefix-matches-which-format).
 This site is HTML, so every `html:` prefix on it resolves.
 The [Typst preview](preview.pdf) is the same site rendered to another format, where the `typst:` prefixes resolve instead and the `html:` ones are dropped.
 
+![](preview.pdf){.embed-art loading="lazy" title="The same source resolved for Typst"}
+
 See the [Reference](reference.qmd) for the precedence rules, and the [Examples](examples.qmd) for each of them resolved.
 
 ## Where it works
