@@ -12,7 +12,7 @@ The name is the metaphor: one source splits into format-specific outputs.
 ## Installation
 
 ```bash
-quarto add mcanouil/quarto-prism@0.4.1
+quarto add mcanouil/quarto-prism@0.4.2
 ```
 
 This will install the extension under the `_extensions` subdirectory.

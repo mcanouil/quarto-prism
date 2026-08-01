@@ -1,6 +1,6 @@
 title: Prism
 author: Mickaël Canouil
-version: 0.4.1
+version: 0.4.2
 quarto-required: ">=1.9.38"
 contributes:
   filters:
