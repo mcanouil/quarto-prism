@@ -28,6 +28,15 @@
 ---   When the prefix does not match, the attribute is dropped.
 ---   Attributes whose key contains no colon are passed through unchanged.
 ---
+---   The `typst:` prefix is shared with Pandoc's own Typst writer, which reads
+---   `typst:text:<property>` on a div and a span and `typst:<parameter>` on a
+---   div, and reads nothing on a code block or a heading. Whenever Pandoc
+---   writes Typst those keys keep their prefix and pass through untouched,
+---   rather than being promoted to a name no consumer reads. Every other
+---   `typst:` key stays prism's, since the writer splices it unvalidated and
+---   Typst rejects it. `extensions.prism.claim-typst` names reserved keys to
+---   promote instead. See <https://pandoc.org/typst-property-output.html>.
+---
 ---   Precedence for a given `name`: exact format match > alias match >
 ---   default fallback > unprefixed pass-through.
 ---
