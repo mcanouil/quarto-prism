@@ -69,7 +69,23 @@
 local EXTENSION_NAME = 'prism'
 
 local slide_formats = require(quarto.utils.resolve_path('_modules/slide-formats.lua'):gsub('%.lua$', ''))
-local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
+local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
+local schema = require(quarto.utils.resolve_path('_vendor/quarto-wizard/schema.lua'):gsub('%.lua$', ''))
+local check = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/schema-check.lua'):gsub('%.lua$', ''))
+
+--- The schema check, built once per render. It reads `_schema.yml` on the way
+--- in and checks the document configuration once.
+---
+--- The validator is injected rather than required by the check module, so the
+--- two vendored sources stay independent of where the other was placed.
+---
+--- The extension contributes a filter and no shortcode, so the check runs from
+--- the `Meta` handler, which is the only place the document configuration is
+--- read.
+---
+--- A schema that cannot be read is reported by the module as an error and the
+--- render carries on: a configuration file must not stop a document.
+local checker = check.new(schema, EXTENSION_NAME)
 
 --- Resolve the active Quarto target format name once per render.
 --- Strips Pandoc format variants (e.g. `html+raw_attribute` -> `html`) so
@@ -291,6 +307,8 @@ end
 --- @param meta table The document metadata table.
 --- @return nil
 local function read_options(meta)
+  checker:options(meta)
+
   local config = meta['extensions'] and meta['extensions'][EXTENSION_NAME]
   if not config then return nil end
   if config['warn-on-drop'] ~= nil then
