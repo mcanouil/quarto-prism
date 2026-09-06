@@ -69,7 +69,7 @@
 local EXTENSION_NAME = 'prism'
 
 local slide_formats = require(quarto.utils.resolve_path('_modules/slide-formats.lua'):gsub('%.lua$', ''))
-local log = require(quarto.utils.resolve_path('_modules/logging.lua'):gsub('%.lua$', ''))
+local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
 
 --- Resolve the active Quarto target format name once per render.
 --- Strips Pandoc format variants (e.g. `html+raw_attribute` -> `html`) so
