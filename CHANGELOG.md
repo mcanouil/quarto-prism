@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+- fix: Read `warn-on-drop` through the schema, so `warn-on-drop: yes` warns. Comparing the document text left every spelling but `true` silent. (#27)
+
 ### Documentation
 
 - docs: Serve the extension's social card as the Open Graph image, so a shared link shows the card rather than the first image on the page. (#24)
@@ -10,6 +14,7 @@
 
 - build: Update the vendored Lua modules to 2.3.0, which includes the `schema-check` fix for an extension whose entry points are in a subdirectory. A module no longer carries a version line in its header, so its checksum changes only when its code changes. (#25)
 - build: Fetch the schema validator from a Quarto Wizard release asset rather than a raw path inside its repository, which a refactor could move without notice. The vendored file is unchanged. (#26)
+- build: Update the vendored Lua modules to 2.5.0, which adds the accessor that reads what the schema resolves an option to. The schema validator moves to 3.6.3, whose vendored file is unchanged. (#27)
 
 ## 0.5.0 (2026-09-07)
 
