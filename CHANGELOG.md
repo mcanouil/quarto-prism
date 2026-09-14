@@ -4,7 +4,7 @@
 
 ### Bug Fixes
 
-- fix: Read `warn-on-drop` through the schema, so `warn-on-drop: yes` warns. Comparing the document text left every spelling but `true` silent. (#27)
+- fix: Read `warn-on-drop` through the schema, so a value that is not a boolean is reported rather than ignored. Comparing the document text left every spelling but `true` silent, including the mistake itself. (#27)
 
 ### Documentation
 
