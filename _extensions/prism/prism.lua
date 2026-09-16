@@ -308,12 +308,9 @@ end
 --- @return nil
 local function read_options(meta)
   checker:options(meta)
-
-  local config = meta['extensions'] and meta['extensions'][EXTENSION_NAME]
-  if not config then return nil end
-  if config['warn-on-drop'] ~= nil then
-    warn_on_drop = pandoc.utils.stringify(config['warn-on-drop']) == 'true'
-  end
+  -- The schema decides what counts as true, so `warn-on-drop: no` turns the
+  -- warning off. Reading the document itself left it on.
+  warn_on_drop = checker:option('warn-on-drop') == true
   return nil
 end
 
