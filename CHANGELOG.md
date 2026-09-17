@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - fix: Read `warn-on-drop` through the schema, so a value that is not a boolean is reported rather than ignored. Comparing the document text left every spelling but `true` silent, including the mistake itself. (#27)
+- fix: Report a key nested inside an option as a warning rather than an error, so one nested typo does not invalidate the whole configuration. This matches how the extension already reports an unknown key at the top of its own block. (#27)
 
 ### Documentation
 
@@ -14,7 +15,7 @@
 
 - build: Update the vendored Lua modules to 2.3.0, which includes the `schema-check` fix for an extension whose entry points are in a subdirectory. A module no longer carries a version line in its header, so its checksum changes only when its code changes. (#25)
 - build: Fetch the schema validator from a Quarto Wizard release asset rather than a raw path inside its repository, which a refactor could move without notice. The vendored file is unchanged. (#26)
-- build: Update the vendored Lua modules to 2.5.0, which adds the accessor that reads what the schema resolves an option to. The schema validator moves to its own release train and is pinned at `schema-v2.1.0`, which accepts only `true` and `false` as a boolean. (#27)
+- build: Update the vendored Lua modules to 2.5.0, which adds the accessor that reads what the schema resolves an option to. The schema validator moves to its own release train and is pinned at `schema-v2.2.0`, which accepts only `true` and `false` as a boolean. (#27)
 
 ## 0.5.0 (2026-09-07)
 
