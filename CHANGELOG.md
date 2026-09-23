@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.5.1 (2026-09-23)
+
 ### Bug Fixes
 
 - fix: Read `warn-on-drop` through the schema, so a value that is not a boolean is reported rather than ignored. Comparing the document text left every spelling but `true` silent, including the mistake itself. (#27)
