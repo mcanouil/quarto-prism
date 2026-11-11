@@ -30,7 +30,7 @@ It applies to divs, spans, headings, and code blocks.
 
 ## Which prefix matches which format
 
-The prefix is matched exactly against the format Quarto is targeting, resolved through [`quarto.format.format_identifier()`](https://quarto.org/docs/extensions/lua-api.html#quarto-format-format_identifier).
+The prefix is matched exactly against the format Quarto is targeting and against its base format, both resolved through [`quarto.format.format_identifier()`](https://quarto.org/docs/extensions/lua-api.html#quarto-format-format_identifier).
 
 | Active format | Matching prefix |
 | --- | --- |
@@ -42,13 +42,15 @@ The prefix is matched exactly against the format Quarto is targeting, resolved t
 | `beamer` | `beamer:` |
 | `docx` | `docx:` |
 | `pptx` | `pptx:` |
-| A custom format, say `mcanouil-typst` | `mcanouil-typst:` |
+| A custom format, say `mcanouil-typst` | `mcanouil-typst:` and `typst:` |
 
 : Format names and their prefixes. {.striped .hover tbl-colwidths="[45,55]"}
 
 ::: {.callout-important}
-A custom format is distinct from the writer beneath it.
-Under `mcanouil-typst` only `mcanouil-typst:` matches, not `typst:`, and the other way round.
+A custom format also matches the prefix of its base format.
+Under `mcanouil-typst`, both `mcanouil-typst:` and `typst:` match, and `mcanouil-typst:` wins when both name the same attribute.
+The reverse is not true: under `typst`, `mcanouil-typst:` does not match.
+The `slide` alias also applies to a custom format based on a slide format, for example `foo-revealjs`.
 
 The same holds for `pdf` and `latex`, which are two Quarto formats over one writer: `format: pdf` matches `pdf:` alone, and `latex:` matches only when the target is `latex`, the format that stops at `.tex`.
 :::
@@ -84,9 +86,10 @@ For one attribute name on one element:
 | Rank | Source | Example |
 | --- | --- | --- |
 | 1 | An exact format match. | `html:style` under `html`. |
-| 2 | A group alias. | `slide:style` under `revealjs`. |
-| 3 | The `default:` fallback. | `default:style`. |
-| 4 | An unprefixed attribute. | `style`. |
+| 2 | A base format match. | `html:style` under `atelier-html`. |
+| 3 | A group alias. | `slide:style` under `revealjs`. |
+| 4 | The `default:` fallback. | `default:style`. |
+| 5 | An unprefixed attribute. | `style`. |
 
 : How a value is chosen. {.striped .hover tbl-colwidths="[10,44,46]"}
 
@@ -111,7 +114,7 @@ extensions:
 : Document and project options. {.striped .hover tbl-colwidths="[18,12,12,58]"}
 
 ::: {.callout-caution}
-A prefix is known when it is an exact format name, a group alias, or `default`.
+A prefix is known when it is the target format name, its base format, a group alias, or `default`.
 Anything else is treated as a format that is not active, and the attribute is dropped in silence.
 
 That is deliberate, since a format of that name would resolve it later, but it also hides a typo such as `revaeljs:style`.
@@ -124,7 +127,7 @@ That is deliberate, since a format of that name would resolve it later, but it a
 
 ## Limitations
 
-- The prefix must match the format name exactly; there is no partial or base-writer matching. The one exception is the reserved `typst:` set above, which is recognised whenever Pandoc writes Typst, including under a custom format such as `mcanouil-typst`.
+- The prefix must match the target format name or its base format exactly; there is no partial matching. A built-in format is its own base format, so `html:` never matches `revealjs`.
 - `slide` is the only group alias.
 - An unknown prefix is indistinguishable from an inactive format, which is why `warn-on-drop` exists.
 - On a div, a `typst:` key naming a `block()` parameter belongs to Pandoc, so `typst:width` sets a block width rather than promoting a `width` attribute. There is no way to promote it instead, and none is needed: the writer drops a plain attribute, so a promoted `width` would reach no consumer.
