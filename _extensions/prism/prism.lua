@@ -92,39 +92,22 @@ local check = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/sche
 --- render carries on: a configuration file must not stop a document.
 local checker = check.new(schema, EXTENSION_NAME)
 
---- Strip Pandoc format variants (e.g. `html+raw_attribute` -> `html`) so
+--- Read a format name from the Quarto format identifier, falling back when
+--- the field is missing or empty.
+--- Strips Pandoc format variants (e.g. `html+raw_attribute` -> `html`) so
 --- prefixes can be written without flag suffixes.
---- @param format string
---- @return string
-local function strip_variants(format)
-  return format:match("^[^+]+") or format
-end
-
---- Read the Quarto format identifier, or an empty table when Quarto does not
---- provide one.
---- @return table<string, string>
-local function read_format_identifier()
-  local ok, identifier = pcall(function()
-    return quarto.format.format_identifier()
-  end)
-  if ok and type(identifier) == "table" then
-    return identifier
-  end
-  return {}
-end
-
-local FORMAT_IDENTIFIER = read_format_identifier()
-
---- Read a format name from the identifier, falling back when it is missing.
 --- @param key string The identifier field, e.g. "target-format".
 --- @param fallback string The name to use when the field is missing or empty.
 --- @return string
 local function resolve_format(key, fallback)
-  local format = FORMAT_IDENTIFIER[key]
+  local ok, identifier = pcall(function()
+    return quarto.format.format_identifier()
+  end)
+  local format = ok and type(identifier) == "table" and identifier[key] or nil
   if format == nil or format == "" then
     format = fallback
   end
-  return strip_variants(format)
+  return format:match("^[^+]+") or format
 end
 
 --- The active Quarto target format name, e.g. `foo-html` for a custom format.
@@ -247,16 +230,6 @@ local function match_prefix(prefix)
   return nil
 end
 
---- Describe the active format for warning messages, naming the base format
---- when the target is a custom format.
---- @return string
-local function describe_target()
-  if BASE_FORMAT == TARGET_FORMAT then
-    return "target format '" .. TARGET_FORMAT .. "'"
-  end
-  return "target format '" .. TARGET_FORMAT .. "' (base format '" .. BASE_FORMAT .. "')"
-end
-
 --- Describe an element for warning messages: prefer the id, then the first
 --- class, then the element tag.
 --- @param el pandoc.Div|pandoc.Span|pandoc.CodeBlock|pandoc.Header
@@ -347,7 +320,8 @@ local function process(el)
       EXTENSION_NAME,
       "Dropped attribute(s) '" .. table.concat(dropped, "', '") ..
         "' on " .. describe_element(el) ..
-        " because no prefix matched " .. describe_target() .. "."
+        " because no prefix matched target format '" .. TARGET_FORMAT .. "'" ..
+        (BASE_FORMAT ~= TARGET_FORMAT and " (base format '" .. BASE_FORMAT .. "')" or "") .. "."
     )
   end
 
