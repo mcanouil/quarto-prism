@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.6.0 (2026-11-11)
+
 ### Bug Fixes
 
 - fix: Match a prefix against the base format of a custom format as well as its name, so `html:` applies under `foo-html` and `slide:` under `foo-revealjs`. The custom format name still wins over its base format on the same element. (#30)
