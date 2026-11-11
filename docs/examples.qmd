@@ -16,13 +16,13 @@ extensions:
 ```
 
 ::: {.callout-important}
-## The prefix here is `atelier-html:`, not `html:`
+## Both `atelier-html:` and `html:` match here
 
-These pages are rendered by the `atelier-html` format, a Quarto custom format built on the HTML writer.
-The prefix is matched against the format Quarto is targeting, which is the custom format's own name, so `html:` matches nothing here and `atelier-html:` matches everything.
+These pages are rendered by the `atelier-html` format, a Quarto custom format based on `html`.
+The prefix is matched against the custom format name and against its base format, so both `atelier-html:` and `html:` apply.
+The examples below use `atelier-html:`, the more specific of the two.
 
-That is the same rule the [Reference](reference.qmd#which-prefix-matches-which-format) states for `mcanouil-typst` against `typst`, and the attribute vanishes without a word when you get it wrong.
-Turning `warn-on-drop` on was how this page found out.
+That is the same rule the [Reference](reference.qmd#which-prefix-matches-which-format) states for `mcanouil-typst` and `typst`.
 :::
 
 Because these pages deliberately carry prefixes for formats they are not built as, the render reports a handful of drops every time.
@@ -40,7 +40,24 @@ Firebrick here, blue in the PDF.
 Firebrick here, blue in the PDF.
 :::
 
-The `typst:` attribute is dropped from this page, and the `html:` one from the PDF.
+The `typst:` attribute is dropped from this page, and the `atelier-html:` one from the PDF.
+
+## A base format match
+
+A custom format also matches the prefix of its base format.
+When both prefixes name the same attribute, the custom format name wins.
+
+```markdown
+::: {html:style="color: darkorange;" atelier-html:style="color: firebrick;"}
+Firebrick here, because `atelier-html:` is more specific than `html:`.
+:::
+```
+
+::: {html:style="color: darkorange;" atelier-html:style="color: firebrick;"}
+Firebrick here, because `atelier-html:` is more specific than `html:`.
+:::
+
+Without the `atelier-html:` attribute, the paragraph is dark orange.
 
 ## The default fallback
 

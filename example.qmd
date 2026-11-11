@@ -48,7 +48,8 @@ Rebecca purple in HTML, grey everywhere else.
 Rebecca purple in HTML, grey everywhere else.
 :::
 
-The prefix is the name of the format Quarto targets, so a custom format is written by its own name rather than the writer beneath it, and PDF is `latex:`.
+The prefix is the name of the format Quarto targets, or the base format of a custom format, so `html:` also applies under `foo-html`.
+When both name the same attribute, the custom format name wins.
 
 Set `warn-on-drop` under `extensions.prism` to catch a mistyped prefix, which is otherwise indistinguishable from a format that is simply not active.
 

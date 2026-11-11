@@ -53,15 +53,16 @@ Firebrick on a page, deep sky blue on a slide.
 
 Under `html` that resolves to `style="color: firebrick;"`, and the `revealjs:` attribute is dropped:
 
-::: {atelier-html:style="color: firebrick;" revealjs:style="color: deepskyblue;"}
+::: {html:style="color: firebrick;" revealjs:style="color: deepskyblue;"}
 Firebrick on a page, deep sky blue on a slide.
 :::
 
 It works on divs, spans, headings, and code blocks.
 
 ::: {.callout-important}
-The prefix is the name of the format Quarto is targeting, and a custom format is not its base writer.
-These pages are built by `atelier-html`, so the paragraph above is written `atelier-html:style` rather than `html:style`; written the other way it would resolve to nothing.
+The prefix is the name of the format Quarto is targeting, or the name of the base format of a custom format.
+These pages are built by `atelier-html`, a custom format based on `html`, so the `html:style` attribute above applies here.
+On one element, the custom format name is more specific: `atelier-html:style` wins over `html:style`.
 See [the reference](reference.qmd#which-prefix-matches-which-format).
 :::
 
