@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Set the resolved attributes through `pandoc.Attr`, so Quarto 2 accepts them and the order stays the same.
+
 ## 0.6.0 (2026-11-11)
 
 ### Bug Fixes
