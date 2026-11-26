@@ -325,7 +325,7 @@ local function process(el)
     )
   end
 
-  el.attributes = final
+  el.attr = pandoc.Attr(el.identifier, el.classes, final)
   return el
 end
 
